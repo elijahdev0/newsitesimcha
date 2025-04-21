@@ -137,7 +137,7 @@ const BookingFlow: React.FC = () => {
   
   return (
     <>
-      <Header />
+      <Header variant="dark-text" />
       <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
         <div className="container mx-auto px-4">
           {/* Progress Steps */}

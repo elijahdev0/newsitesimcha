@@ -5,11 +5,26 @@ import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
 import { cn } from '../../utils/cn';
 
-export const Header: React.FC = () => {
+// Define the variant prop type
+interface HeaderProps {
+  variant?: 'default' | 'dark-text';
+}
+
+export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuthStore();
+
+  // Define text colors based on variant
+  const logoTextColor = variant === 'dark-text' ? 'text-tactical-900' : 'text-white';
+  const activeLinkColor = variant === 'dark-text' ? 'text-tactical-900' : 'text-white';
+  const inactiveLinkColor = variant === 'dark-text' ? 'text-gray-700' : 'text-gray-300';
+  const hoverLinkColor = variant === 'dark-text' ? 'hover:text-tactical-900' : 'hover:text-white';
+  const buttonTextColor = variant === 'dark-text' ? 'text-tactical-900' : 'text-white';
+  const mobileMenuTextColor = variant === 'dark-text' ? 'text-tactical-900' : 'text-white';
+  const mobileInactiveLinkColor = variant === 'dark-text' ? 'text-gray-700' : 'text-gray-300';
+
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
@@ -30,19 +45,32 @@ export const Header: React.FC = () => {
     { name: 'Contact', path: '/contact' },
   ];
 
+  // Determine header background based on scroll, menu state, and variant
+  const headerBgClass = variant === 'dark-text'
+    ? 'bg-white/95 backdrop-blur-sm py-2 shadow-md'
+    : isScrolled
+    ? 'bg-tactical-900/95 backdrop-blur-sm py-2 shadow-md'
+    : 'bg-transparent py-4';
+
+  // Determine mobile menu background based on variant
+  const mobileMenuBgClass = variant === 'dark-text' ? 'bg-white/95' : 'bg-tactical-900/95';
+
+
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled 
-          ? 'bg-tactical-900/95 backdrop-blur-sm py-2 shadow-md' 
-          : 'bg-transparent py-4'
+        headerBgClass
       )}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center" onClick={closeMenu}>
           <Shield className="w-7 h-7 text-accent-500 mr-2" />
-          <span className="text-white font-heading font-semibold text-xl">
+          <span className={cn(
+              "font-heading font-semibold text-xl",
+              logoTextColor // Apply conditional logo text color
+            )}
+          >
             ELITE TACTICAL
           </span>
         </Link>
@@ -55,10 +83,11 @@ export const Header: React.FC = () => {
                 <Link
                   to={item.path}
                   className={cn(
-                    'text-sm font-medium transition-colors hover:text-white',
-                    location.pathname === item.path 
-                      ? 'text-white' 
-                      : 'text-gray-300'
+                    'text-sm font-medium transition-colors',
+                     hoverLinkColor, // Apply conditional hover color
+                    location.pathname === item.path
+                      ? activeLinkColor // Apply conditional active color
+                      : inactiveLinkColor // Apply conditional inactive color
                   )}
                 >
                   {item.name}
@@ -71,24 +100,35 @@ export const Header: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="ghost" size="sm" className="text-white">
+                  <Button variant="ghost" size="sm" className={cn(buttonTextColor)}> {/* Apply conditional button text color */}
                     <UserCircle className="w-4 h-4 mr-2" />
                     Dashboard
                   </Button>
                 </Link>
-                <Button variant="outline" size="sm" onClick={() => logout()} className="text-white border-gray-600">
+                <Button
+                    variant="outline" // Use standard outline variant
+                    size="sm"
+                    onClick={() => logout()}
+                    // Apply conditional text and border colors for the dark-text variant
+                    className={cn(
+                      variant === 'dark-text'
+                        ? 'text-tactical-700 border-gray-400 hover:bg-gray-100 hover:text-tactical-900'
+                        : 'text-white border-gray-600 hover:bg-white/10 hover:text-white'
+                    )}
+                 >
                   Log Out
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className="text-white">
+                  <Button variant="ghost" size="sm" className={cn(buttonTextColor)}> {/* Apply conditional button text color */}
                     <LogIn className="w-4 h-4 mr-2" />
                     Log In
                   </Button>
                 </Link>
                 <Link to="/register">
+                  {/* Accent button likely doesn't need text color change, but check visually */}
                   <Button variant="accent" size="sm">
                     Join Now
                   </Button>
@@ -100,7 +140,7 @@ export const Header: React.FC = () => {
 
         {/* Mobile Menu Button */}
         <button
-          className="p-2 md:hidden text-white"
+          className={cn("p-2 md:hidden", buttonTextColor)} // Apply conditional text color
           onClick={toggleMenu}
           aria-label="Toggle menu"
         >
@@ -110,7 +150,7 @@ export const Header: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-tactical-900/95 backdrop-blur-sm">
+         <div className={cn("md:hidden backdrop-blur-sm", mobileMenuBgClass)}> {/* Apply conditional mobile menu background */}
           <div className="container mx-auto px-4 py-4">
             <ul className="flex flex-col space-y-4">
               {navItems.map((item) => (
@@ -118,10 +158,11 @@ export const Header: React.FC = () => {
                   <Link
                     to={item.path}
                     className={cn(
-                      'block text-base font-medium py-2 transition-colors hover:text-white',
-                      location.pathname === item.path 
-                        ? 'text-white' 
-                        : 'text-gray-300'
+                      'block text-base font-medium py-2 transition-colors',
+                      hoverLinkColor, // Apply conditional hover color
+                      location.pathname === item.path
+                        ? mobileMenuTextColor // Use mobile-specific active color
+                        : mobileInactiveLinkColor // Use mobile-specific inactive color
                     )}
                     onClick={closeMenu}
                   >
@@ -129,19 +170,23 @@ export const Header: React.FC = () => {
                   </Link>
                 </li>
               ))}
-              
-              <li className="border-t border-gray-800 pt-4 mt-4">
+
+              <li className={cn(
+                  "border-t pt-4 mt-4",
+                  variant === 'dark-text' ? 'border-gray-300' : 'border-gray-800' // Adjust border color
+                 )}
+              >
                 {isAuthenticated ? (
                   <>
-                    <Link 
-                      to="/dashboard" 
-                      className="block text-white py-2"
+                    <Link
+                      to="/dashboard"
+                      className={cn("block py-2", mobileMenuTextColor)} // Apply conditional mobile text color
                       onClick={closeMenu}
                     >
                       Dashboard
                     </Link>
-                    <button 
-                      className="block text-gray-300 py-2"
+                    <button
+                      className={cn("block w-full text-left py-2", mobileInactiveLinkColor)} // Apply conditional mobile text color
                       onClick={() => {
                         logout();
                         closeMenu();
@@ -152,16 +197,17 @@ export const Header: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Link 
-                      to="/login" 
-                      className="block text-white py-2"
+                    <Link
+                      to="/login"
+                      className={cn("block py-2", mobileMenuTextColor)} // Apply conditional mobile text color
                       onClick={closeMenu}
                     >
                       Log In
                     </Link>
-                    <Link 
-                      to="/register" 
-                      className="block text-accent-500 py-2"
+                    <Link
+                      to="/register"
+                      // Adjust accent color slightly if needed for contrast on white background
+                      className={cn("block py-2", variant === 'dark-text' ? 'text-accent-600 hover:text-accent-700' : 'text-accent-500 hover:text-accent-400')}
                       onClick={closeMenu}
                     >
                       Join Now
