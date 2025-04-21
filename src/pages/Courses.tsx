@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { CourseCard } from '../components/courses/CourseCard';
+import CourseComparisonTable from '../components/courses/CourseComparisonTable';
 import { courses } from '../data/courses';
 import { Button } from '../components/common/Button';
 
@@ -76,11 +77,20 @@ const Courses: React.FC = () => {
             </div>
 
             {/* Course List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
               {filteredCourses.map(course => (
                 <CourseCard key={course.id} course={course} />
               ))}
             </div>
+
+            {/* Comparison Table Section */}
+            <div className="mb-16">
+                <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-8 text-center">
+                    Compare Packages
+                </h2>
+                <CourseComparisonTable courses={courses} />
+            </div>
+
           </div>
         </section>
 

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../common/Button';
-import { formatCurrency } from '../../utils/formatters';
 import { Course } from '../../types';
+import { formatCurrency } from '../../utils/formatters';
+import { Check, ArrowRight } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 interface CourseCardProps {
   course: Course;
@@ -11,67 +13,63 @@ interface CourseCardProps {
 export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   return (
     <div 
-      className={`
-        bg-white border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300
-        ${course.isPopular ? 'ring-2 ring-accent-500' : 'border-gray-200'}
-      `}
+      className={cn(
+        "flex flex-col bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200",
+        course.isPopular ? 'border-accent-500 border-2' : ''
+      )}
     >
       {course.isPopular && (
-        <div className="bg-accent-500 text-white text-center py-2 font-medium text-sm">
-          MOST POPULAR
+        <div className="bg-accent-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-3 text-center">
+          Most Popular
         </div>
       )}
-      
-      <div className="p-6">
-        <h3 className="font-heading text-xl font-bold text-tactical-900 mb-2">
+      <div className="p-6 flex-grow">
+        <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
           {course.title}
         </h3>
-        
-        <div className="text-2xl font-bold text-tactical-900 mb-4">
-          {formatCurrency(course.price)}
-        </div>
-        
-        <p className="text-tactical-600 text-sm mb-6">
+        <p className="text-tactical-700 text-sm mb-4 h-16 line-clamp-3">
           {course.description}
         </p>
         
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
-              {course.duration} days
-            </span>
-            <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
-              {course.rounds} rounds
-            </span>
-            {course.hotel && (
-              <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
-                Accommodation
-              </span>
-            )}
-          </div>
-          
-          <ul className="space-y-2">
-            {course.includes.map((feature, i) => (
-              <li key={i} className="flex items-start">
-                <span className="text-accent-500 mr-2 font-bold">✓</span>
-                <span className="text-sm text-tactical-700">{feature}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="mb-5">
+          <span className="text-3xl font-bold text-tactical-900">
+            {formatCurrency(course.price)}
+          </span>
+          {/* <span className="text-tactical-600 text-sm ml-1">/ package</span> */}
         </div>
-        
-        <div className="space-y-3">
-          <Link to={`/courses/${course.id}`} className="block">
-            <Button variant="primary" fullWidth>
-              View Details
-            </Button>
-          </Link>
-          <Link to={`/book/${course.id}`} className="block">
-            <Button variant="outline" fullWidth>
-              Book Now
-            </Button>
-          </Link>
-        </div>
+
+        <ul className="space-y-3 mb-6 text-sm flex-grow">
+          <li className="flex items-center">
+            <span className="text-green-500 mr-2"><Check size={16} /></span>
+            <span className="text-tactical-700">{course.duration} Days Training</span>
+          </li>
+          <li className="flex items-center">
+            <span className="text-green-500 mr-2"><Check size={16} /></span>
+            <span className="text-tactical-700">{course.rounds} Rounds Included</span>
+          </li>
+          <li className="flex items-center">
+            <span className="text-green-500 mr-2"><Check size={16} /></span>
+            <span className="text-tactical-700">
+              {course.hotel ? `Accommodation: ${course.hotel}` : 'Accommodation Not Included'}
+            </span>
+          </li>
+          <li className="flex items-center">
+            <span className="text-green-500 mr-2"><Check size={16} /></span>
+            <span className="text-tactical-700">
+              {course.transport ? `Transport: ${course.transport}` : 'Transport Not Included'}
+            </span>
+          </li>
+        </ul>
+      </div>
+      
+      <div className="bg-gray-50 px-6 py-4 mt-auto">
+        <Link to={`/book/${course.id}`}>
+          <Button variant="primary" fullWidth>
+            Book Now
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </Link>
+        {/* View Details Button Removed */}
       </div>
     </div>
   );
