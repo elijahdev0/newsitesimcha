@@ -1,0 +1,328 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Users, Target, Award } from 'lucide-react';
+import { Header } from '../components/common/Header';
+import { Footer } from '../components/common/Footer';
+
+const About: React.FC = () => {
+  return (
+    <>
+      <Header />
+      <main>
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-16 bg-tactical-900">
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20"
+            style={{ 
+              backgroundImage: 'url(https://images.pexels.com/photos/7988086/pexels-photo-7988086.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)' 
+            }}
+          />
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div 
+              className="max-w-3xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-block text-accent-500 font-semibold mb-4 tracking-wider text-sm uppercase">
+                Our Mission
+              </span>
+              <h1 className="font-heading text-4xl md:text-5xl font-bold text-white mb-6">
+                Authentic Tactical Training From The Battlefield
+              </h1>
+              <p className="text-gray-300 text-lg mb-4">
+                At Elite Tactical Training, we deliver authentic combat expertise based on real-world battlefield experience. Our mission is to provide elite-level tactical training that works when it matters most.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Philosophy Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                  Our Training Philosophy
+                </h2>
+                <p className="text-tactical-700 mb-4">
+                  Unlike conventional training programs, we focus on real-world scenarios and adaptive techniques that work under stress. We don't teach theory—we teach what works when lives are on the line.
+                </p>
+                <p className="text-tactical-700 mb-8">
+                  Our methodology combines military precision with practical application, making advanced tactical skills accessible to anyone committed to learning. Every technique we teach has been battle-tested in real combat situations.
+                </p>
+
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
+                      <Shield className="w-6 h-6 text-accent-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Authenticity</h3>
+                      <p className="text-tactical-600">Every technique we teach has been battle-tested in real combat situations.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
+                      <Target className="w-6 h-6 text-accent-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Adaptability</h3>
+                      <p className="text-tactical-600">We train you to think tactically in any situation and adapt to any threat or environment.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
+                      <Award className="w-6 h-6 text-accent-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Excellence</h3>
+                      <p className="text-tactical-600">We maintain the highest standards in every aspect of our training.</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="relative">
+                  <div className="absolute -top-4 -right-4 w-32 h-32 bg-accent-500/20 rounded-tr-lg z-0"></div>
+                  <img 
+                    src="https://images.pexels.com/photos/7988079/pexels-photo-7988079.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                    alt="Tactical Training"
+                    className="rounded-lg shadow-xl relative z-10"
+                  />
+                  <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent-500/20 rounded-bl-lg z-0"></div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Instructor Background */}
+        <section className="py-16 bg-tactical-100">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                Meet Your Instructor
+              </h2>
+              <p className="text-tactical-700">
+                With over two decades of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="h-64 md:h-auto">
+                  <img 
+                    src="https://images.pexels.com/photos/4753879/pexels-photo-4753879.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                    alt="Instructor Menahem" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-8">
+                  <h3 className="font-heading text-2xl font-bold text-tactical-900 mb-4">Menahem</h3>
+                  <p className="text-accent-500 font-medium mb-4">Former Israeli Special Forces Commander</p>
+                  
+                  <p className="text-tactical-700 mb-6">
+                    Specializing in close-quarters combat, firearms training, and threat assessment, Menahem brings authentic battlefield expertise to every session, ensuring you receive real-world skills that can save lives.
+                  </p>
+                  
+                  <p className="text-tactical-700">
+                    His training philosophy combines military precision with practical application, making advanced tactical skills accessible to anyone committed to learning.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Who We Train */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                Who We Train
+              </h2>
+              <p className="text-tactical-700">
+                Our programs serve a diverse range of clients seeking elite-level tactical training. Whether you're a professional in the security sector or a civilian committed to personal defense, our training is tailored to your needs.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Security Professionals
+                </h3>
+                <p className="text-tactical-700">
+                  Executive protection specialists, security consultants, and corporate security teams looking to enhance tactical response capabilities.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Law Enforcement
+                </h3>
+                <p className="text-tactical-700">
+                  Police officers, tactical units, and specialized law enforcement personnel seeking advanced combat training beyond standard department programs.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Military Personnel
+                </h3>
+                <p className="text-tactical-700">
+                  Active duty and veterans looking to refine their tactical skills with specialized training from elite foreign special forces.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Civilians
+                </h3>
+                <p className="text-tactical-700">
+                  Responsible civilians committed to high-level self-defense training and tactical firearms expertise.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Firearms Enthusiasts
+                </h3>
+                <p className="text-tactical-700">
+                  Experienced shooters looking to train at an elite level with battlefield-proven techniques and tactical applications.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-tactical-100 p-8 rounded-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <Users className="w-10 h-10 text-accent-500 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                  Corporate Teams
+                </h3>
+                <p className="text-tactical-700">
+                  Leadership groups and executive teams seeking challenging experiences that build teamwork, decision-making skills, and resilience.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Facility */}
+        <section className="py-16 bg-tactical-100">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <img 
+                  src="https://images.pexels.com/photos/3727276/pexels-photo-3727276.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                  alt="S-Arms Shooting Range" 
+                  className="rounded-lg shadow-xl"
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                  Our Training Facility
+                </h2>
+                <p className="text-tactical-700 mb-4">
+                  Located at the S-Arms Shooting Range in Tallinn, Estonia, our training facility provides the perfect environment for tactical development with both indoor and outdoor training areas.
+                </p>
+                <p className="text-tactical-700 mb-8">
+                  The facility features multiple shooting ranges, close-quarters battle rooms, tactical obstacle courses, and specialized training environments designed to simulate real-world scenarios.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <span className="text-accent-500 mr-3">✓</span>
+                    <span className="text-tactical-800">Multiple shooting lanes with variable distances</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-accent-500 mr-3">✓</span>
+                    <span className="text-tactical-800">CQB simulation rooms for tactical movement training</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-accent-500 mr-3">✓</span>
+                    <span className="text-tactical-800">Outdoor tactical ranges for dynamic shooting scenarios</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-accent-500 mr-3">✓</span>
+                    <span className="text-tactical-800">Classroom facilities for tactical briefings</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-accent-500 mr-3">✓</span>
+                    <span className="text-tactical-800">Full equipment and firearms available for training</span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+};
+
+export default About;
