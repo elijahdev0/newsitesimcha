@@ -12,72 +12,80 @@ import { courses } from '../../data/courses';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const { getBookings } = useBookingStore();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchBookings = async () => {
-      try {
-        const userBookings = await getBookings();
-        setBookings(userBookings);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-      } finally {
-        setIsLoading(false);
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        navigate('/login');
+      } else {
+        const fetchBookings = async () => {
+          setIsLoadingBookings(true);
+          try {
+            const userBookings = await getBookings();
+            setBookings(userBookings);
+          } catch (error) {
+            console.error('Error fetching bookings:', error);
+          } finally {
+            setIsLoadingBookings(false);
+          }
+        };
+        fetchBookings();
       }
-    };
-
-    fetchBookings();
-  }, [isAuthenticated, navigate, getBookings]);
+    }
+  }, [isAuthLoading, isAuthenticated, navigate, getBookings]);
 
   const getCourseById = (courseId: string): Course | undefined => {
     return courses.find(course => course.id === courseId);
   };
+
+  const showOverallLoading = isAuthLoading || isLoadingBookings;
 
   return (
     <>
       <Header variant="dark-text" />
       <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
         <div className="container mx-auto px-4">
-          {/* Welcome Header */}
-          <div className="bg-tactical-900 text-white rounded-xl p-8 mb-8 shadow-lg">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div>
-                <h1 className="text-2xl font-heading font-bold mb-2">
-                  Welcome, {user?.firstName || 'Trainee'}
-                </h1>
-                <p className="text-gray-300">
-                  Manage your tactical training packages and track your progress.
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0">
-                <Link to="/courses">
-                  <Button variant="accent">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Book New Training
-                  </Button>
-                </Link>
+          {!isAuthLoading && user && (
+            <div className="bg-tactical-900 text-white rounded-xl p-8 mb-8 shadow-lg">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                  <h1 className="text-2xl font-heading font-bold mb-2">
+                    Welcome, {user?.firstName || 'Trainee'}
+                  </h1>
+                  <p className="text-gray-300">
+                    Manage your tactical training packages and track your progress.
+                  </p>
+                </div>
+                <div className="mt-4 md:mt-0">
+                  <Link to="/courses">
+                    <Button variant="accent">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Book New Training
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+          {isAuthLoading && (
+            <div className="bg-tactical-900 text-white rounded-xl p-8 mb-8 shadow-lg animate-pulse">
+              <div className="h-8 bg-tactical-700 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-tactical-600 rounded w-1/2"></div>
+            </div>
+          )}
 
-          {/* Dashboard Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+              <div className="bg-white rounded-xl shadow-md p-6 mb-8 min-h-[300px]">
                 <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4">
                   Your Upcoming Trainings
                 </h2>
 
-                {isLoading ? (
+                {showOverallLoading ? (
                   <div className="flex justify-center items-center h-40">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tactical-700"></div>
                   </div>
@@ -98,6 +106,7 @@ const Dashboard: React.FC = () => {
                   <div className="space-y-4">
                     {bookings.map(booking => {
                       const course = getCourseById(booking.courseId);
+                      if (!course) return null;
                       return (
                         <div 
                           key={booking.id} 
@@ -106,12 +115,12 @@ const Dashboard: React.FC = () => {
                           <div className="flex flex-col md:flex-row justify-between">
                             <div>
                               <h3 className="font-heading font-semibold text-lg text-tactical-900">
-                                {course?.title || 'Training Package'}
+                                {course.title}
                               </h3>
                               <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Calendar className="w-4 h-4 mr-1.5 text-tactical-500" />
-                                  {formatDate(new Date().toISOString())}
+                                  {booking.createdAt ? formatDate(booking.createdAt) : 'Date TBD'}
                                 </div>
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Clock className="w-4 h-4 mr-1.5 text-tactical-500" />
@@ -123,7 +132,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                               </div>
                               
-                              {booking.extras.length > 0 && (
+                              {booking.extras && booking.extras.length > 0 && (
                                 <div className="mt-3">
                                   <p className="text-sm text-tactical-700 font-medium mb-1">
                                     Add-ons:
@@ -143,13 +152,13 @@ const Dashboard: React.FC = () => {
                             </div>
                             
                             <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end">
-                              <div className="bg-accent-500 text-white text-xs font-medium px-2.5 py-1 rounded-full mb-2">
+                              <div className="bg-accent-500 text-white text-xs font-medium px-2.5 py-1 rounded-full mb-2 capitalize">
                                 {booking.status}
                               </div>
                               <div className="text-lg font-bold text-tactical-900">
                                 {formatCurrency(booking.totalAmount)}
                               </div>
-                              <div className="text-xs text-tactical-600 mt-1">
+                              <div className="text-xs text-tactical-600 mt-1 capitalize">
                                 Payment: {booking.paymentStatus}
                               </div>
                               <Link to={`/bookings/${booking.id}`} className="mt-3">
@@ -167,39 +176,53 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Profile Card */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4">
-                  Your Profile
-                </h2>
-                <div className="flex items-center mb-6">
-                  <div className="w-16 h-16 bg-tactical-200 rounded-full flex items-center justify-center mr-4">
-                    <Users className="w-8 h-8 text-tactical-700" />
+              {!isAuthLoading && user ? (
+                <div className="bg-white rounded-xl shadow-md p-6">
+                  <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4">
+                    Your Profile
+                  </h2>
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-16 bg-tactical-200 rounded-full flex items-center justify-center mr-4">
+                      <Users className="w-8 h-8 text-tactical-700" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-tactical-900">
+                        {user?.firstName} {user?.lastName}
+                      </h3>
+                      <p className="text-sm text-tactical-600 break-all">{user?.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-tactical-900">
-                      {user?.firstName} {user?.lastName}
-                    </h3>
-                    <p className="text-sm text-tactical-600">{user?.email}</p>
+                  <div className="space-y-3">
+                    <Link to="/profile">
+                      <Button variant="outline" fullWidth>
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Link to="/change-password">
+                      <Button variant="ghost" fullWidth>
+                        Change Password
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <Link to="/profile">
-                    <Button variant="outline" fullWidth>
-                      Edit Profile
-                    </Button>
-                  </Link>
-                  <Link to="/change-password">
-                    <Button variant="ghost" fullWidth>
-                      Change Password
-                    </Button>
-                  </Link>
+              ) : (
+                <div className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+                  <div className="h-6 bg-gray-300 rounded w-1/2 mb-6"></div>
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full mr-4"></div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-40"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Support Card */}
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4">
                   Need Help?
