@@ -18,6 +18,7 @@ export type Course = {
   transport?: string;
   includes: string[];
   isPopular?: boolean;
+  kosherAvailable?: boolean;
 };
 
 export type CourseDate = {

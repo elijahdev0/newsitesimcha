@@ -14,14 +14,20 @@ const CourseComparisonTable: React.FC<CourseComparisonTableProps> = ({ courses }
     { key: 'price', label: 'Price', format: (val: number) => formatCurrency(val) },
     { key: 'duration', label: 'Duration (Days)' },
     { key: 'rounds', label: 'Rounds Included' },
+    { key: 'instructor', label: 'Instructor Type', checkIncludes: ['Private instructor', 'Group instruction'] },
     { key: 'hotel', label: 'Accommodation' },
     { key: 'transport', label: 'Transport' },
-    // Add more features from the 'includes' array if needed, or list some key ones
-    { key: 'includes_private', label: 'Private Instruction', checkIncludes: 'Private instruction' },
-    { key: 'includes_night', label: 'Night Shooting', checkIncludes: 'Night shooting' },
-    { key: 'includes_luxury', label: 'Luxury Experiences', checkIncludes: 'Luxury experiences' },
-    { key: 'includes_media', label: 'Media Package', checkIncludes: 'Media package' },
-    { key: 'includes_meals', label: 'Meals Included', checkIncludes: 'meals' },
+    { key: 'meals', label: 'Meals', checkIncludes: ['All meals', '3 high-quality meals/day', 'Daily meals'] },
+    { key: 'kosherAvailable', label: 'Kosher Meals Available' },
+    { key: 'private_helicopter', label: 'Private Helicopter', checkIncludes: 'Private helicopter ride' },
+    { key: 'yacht_cruise', label: 'Yacht Cruise', checkIncludes: 'Yacht cruise' },
+    { key: 'horseback_riding', label: 'Horseback Riding', checkIncludes: 'Horseback riding' },
+    { key: 'cigar_lounge', label: 'Cigar Lounge', checkIncludes: 'Cigar lounge' },
+    { key: 'media_package', label: 'Media Package', checkIncludes: 'Media package' },
+    { key: 'merch_kit', label: 'Merch Kit', checkIncludes: ['Tactical merch kit', 'Small tactical merch item'] },
+    { key: 'night_shooting', label: 'Night Shooting Included', checkIncludes: 'night shooting' },
+    { key: 'drone_ops', label: 'Drone Ops Course', checkIncludes: 'drone operations' },
+    { key: 'certificate', label: 'Certificate', checkIncludes: 'Certificate of Tactical Excellence' },
   ];
 
   return (
@@ -51,17 +57,29 @@ const CourseComparisonTable: React.FC<CourseComparisonTableProps> = ({ courses }
               {courses.map(course => {
                 let value: any = (course as any)[feature.key];
                 
-                // Handle specific include checks
+                // Handle specific include checks or direct boolean
                 if (feature.checkIncludes) {
-                  const included = course.includes.some(inc => 
-                      inc.toLowerCase().includes(feature.checkIncludes!.toLowerCase())
-                  );
-                   value = included ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
+                  let included = false;
+                  if (Array.isArray(feature.checkIncludes)) {
+                    // Check if any of the keywords are present
+                    included = feature.checkIncludes.some(keyword => 
+                      course.includes.some(inc => inc.toLowerCase().includes(keyword.toLowerCase()))
+                    );
+                  } else {
+                    // Check if the single keyword is present (feature.checkIncludes must be a string here)
+                    const keyword = feature.checkIncludes; // Explicitly treat as string
+                    included = course.includes.some(inc => 
+                      inc.toLowerCase().includes(keyword.toLowerCase())
+                    );
+                  }
+                  value = included ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
+                } else if (feature.key === 'kosherAvailable') {
+                  value = course.kosherAvailable ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
                 } else if (feature.format) {
                   value = feature.format(value);
                 } else if (!value && (feature.key === 'hotel' || feature.key === 'transport')) {
                   value = <span className="text-tactical-500 italic">Not Included</span>;
-                } else if (typeof value === 'boolean') {
+                } else if (typeof value === 'boolean') { // Keep generic boolean check just in case
                   value = value ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
                 }
 

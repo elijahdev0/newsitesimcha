@@ -4,35 +4,46 @@ export const courses: Course[] = [
   {
     id: 'black-talon',
     title: 'Black Talon',
-    price: 23000,
+    price: 26000,
     duration: 6,
     rounds: 4000,
-    hotel: 'Hotel Telegraaf – Executive Room (6 nights)',
-    transport: 'Luxury ground transport + 1x helicopter flight',
-    description: 'Our premium 6-day high-level tactical training experience with luxury accommodations and exclusive experiences.',
+    hotel: 'Presidential/Executive Suite - Hotel Telegraaf (6 nights)',
+    transport: 'VIP chauffeur service & Private helicopter ride',
+    description: 'The most exclusive tactical training package in Europe. For those who demand nothing but the best - in training, lifestyle, and execution.',
     includes: [
-      'Private instruction: pistol, rifle, CQB, first aid, Krav Maga',
-      'Night shooting + 1-on-1 combat coaching',
-      'Luxury experiences: yacht cruise, horseback riding, spa, cigar lounge, concierge',
-      'Full merch kit + professional video/photo package',
-      'All meals, insurance, and range fees included'
+      '6 Days Elite Tactical Training',
+      '4,000 rounds & 10+ weapon systems',
+      'Private instructor (1-on-1)',
+      'Training: CQB, transitions, malfunctions, stress drills, Krav Maga, night shooting, drone operations',
+      'Premium Experiences: Helicopter, Yacht, Horseback Riding, Cigar Lounge',
+      'Hospitality: Presidential/Executive Suite, All meals at finest restaurants (kosher available), VIP chauffeur, Full insurance, Concierge support',
+      'Media package (photo & video)',
+      'Tactical merch kit'
     ],
-    isPopular: true
+    isPopular: true,
+    kosherAvailable: true
   },
   {
     id: 'warrior',
     title: 'Warrior',
-    price: 15000,
+    price: 16000,
     duration: 5,
     rounds: 3000,
-    hotel: 'Hestia Hotel Strand – Standard Room (5 nights)',
-    transport: 'Luxury van transfers',
-    description: '5 days of group tactical training with quality accommodations and essential tactical instruction.',
+    hotel: 'Deluxe Room - Hotel Telegraaf (5 nights)',
+    transport: 'VIP chauffeur service',
+    description: 'Designed for high-level teams or individuals seeking elite training with powerful extras - without stepping into ultra-luxury territory. The Warrior Package is where sharp skills meet elite living.',
     includes: [
-      'Group instruction: pistol, rifle, Krav Maga, first aid',
-      'One group experience: horseback riding or yacht cruise',
-      'Includes meals, insurance, and merch t-shirt'
-    ]
+      '5 Days Tactical Training',
+      '3,000 rounds & 5 weapon systems',
+      'Group instruction (semi-private)',
+      'Training: CQB, malfunctions, stress drills, Krav Maga',
+      'Experiences: Horseback riding, Choice of Helicopter ride OR Yacht cruise',
+      'Hospitality: Deluxe Room, 3 high-quality meals/day (kosher available), VIP chauffeur, Insurance',
+      'Media package (photos & edited video)',
+      'Tactical merch kit',
+      'Certificate of Tactical Excellence'
+    ],
+    kosherAvailable: true
   },
   {
     id: 'combat',
@@ -40,13 +51,18 @@ export const courses: Course[] = [
     price: 5700,
     duration: 5,
     rounds: 1200,
-    hotel: 'Hestia Hotel Strand – Economy Room (5 nights)',
-    transport: 'Shared group transport',
-    description: '5 days of basic tactical training covering essential skills with comfortable accommodations.',
+    hotel: 'Economy Room - Hestia Hotel Strand (5 nights)',
+    transport: 'Shared/Uber-style transport',
+    description: 'A solid entry into the Bald Eagle Tactical system - five days of focused live training designed for those ready to commit to growth. Fast, focused, and grounded.',
     includes: [
-      'Group instruction: pistol/rifle basics, intro to CQB, Krav Maga, trauma care',
-      'All meals, insurance, and merch t-shirt included'
-    ]
+      '5 Days Tactical Training',
+      '1,200 rounds & 3-5 firearms',
+      'Group instruction',
+      'Training: CQB, malfunction clearing, movement drills, self-defense',
+      'Hospitality: Economy Room, Daily meals provided (kosher available), Shared transport, Insurance',
+      'Small tactical merch item (patch or ID tag)'
+    ],
+    kosherAvailable: true
   },
   {
     id: 'iron-sight',
