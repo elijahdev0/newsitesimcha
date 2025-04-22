@@ -16,7 +16,7 @@ export const Instructor: React.FC = () => {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-accent-500 rounded-tl-lg z-0"></div>
               <img 
-                src="https://images.pexels.com/photos/4753879/pexels-photo-4753879.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                src="https://i.imgur.com/nRmngdh.jpeg" 
                 alt="Instructor Menahem"
                 className="rounded-lg object-cover w-full h-[500px] relative z-10"
               />

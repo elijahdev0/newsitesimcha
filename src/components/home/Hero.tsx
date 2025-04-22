@@ -11,7 +11,7 @@ export const Hero: React.FC = () => {
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: 'url(https://images.pexels.com/photos/6498305/pexels-photo-6498305.jpeg?auto=compress&cs=tinysrgb&w=1600)', 
+          backgroundImage: 'url(https://static.vecteezy.com/system/resources/thumbnails/033/350/925/small_2x/wallpaper-dark-urban-surface-background-ai-generated-photo.jpg)', 
           filter: 'brightness(0.3)'
         }}
       />

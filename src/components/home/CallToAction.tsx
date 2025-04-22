@@ -10,7 +10,7 @@ export const CallToAction: React.FC = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-20"
         style={{
-          backgroundImage: 'url(https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)'
+          backgroundImage: 'url(https://static.vecteezy.com/system/resources/thumbnails/033/350/925/small_2x/wallpaper-dark-urban-surface-background-ai-generated-photo.jpg)'
         }}
       />
       

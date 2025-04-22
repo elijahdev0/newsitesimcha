@@ -13,13 +13,13 @@ export const CourseHighlights: React.FC = () => {
     .slice(0, 3);
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-tactical-900">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-tactical-900 mb-4">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-tactical-100 mb-4">
             Elite Tactical Training Packages
           </h2>
-          <p className="text-tactical-600 text-lg">
+          <p className="text-tactical-300 text-lg">
             Choose the mission that suits your goals and elevate your tactical capabilities to new heights with our premium training experiences.
           </p>
         </div>
@@ -29,8 +29,8 @@ export const CourseHighlights: React.FC = () => {
             <motion.div
               key={course.id}
               className={`
-                bg-white border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow
-                ${course.isPopular ? 'ring-2 ring-accent-500' : 'border-gray-200'}
+                bg-tactical-800 border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow
+                ${course.isPopular ? 'ring-2 ring-accent-400' : 'border-tactical-700'}
               `}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -44,22 +44,22 @@ export const CourseHighlights: React.FC = () => {
               )}
               
               <div className="p-6">
-                <h3 className="font-heading text-2xl font-bold text-tactical-900 mb-2">
+                <h3 className="font-heading text-2xl font-bold text-tactical-100 mb-2">
                   {course.title}
                 </h3>
-                <p className="text-tactical-600 mb-4">
+                <p className="text-tactical-300 mb-4">
                   {course.description}
                 </p>
-                <div className="text-3xl font-bold text-tactical-900 mb-6">
+                <div className="text-3xl font-bold text-tactical-100 mb-6">
                   {formatCurrency(course.price)}
                 </div>
                 
                 <div className="mb-6">
                   <div className="flex items-center mb-3">
-                    <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-sm font-medium mr-2">
+                    <span className="bg-tactical-700 text-tactical-100 rounded-full px-3 py-1 text-sm font-medium mr-2">
                       {course.duration} days
                     </span>
-                    <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-sm font-medium">
+                    <span className="bg-tactical-700 text-tactical-100 rounded-full px-3 py-1 text-sm font-medium">
                       {course.rounds} rounds
                     </span>
                   </div>
@@ -67,8 +67,8 @@ export const CourseHighlights: React.FC = () => {
                   <ul className="space-y-2">
                     {course.includes.slice(0, 3).map((feature, i) => (
                       <li key={i} className="flex items-start">
-                        <span className="text-accent-500 mr-2">✓</span>
-                        <span className="text-sm text-tactical-700">{feature}</span>
+                        <span className="text-accent-400 mr-2">✓</span>
+                        <span className="text-sm text-tactical-300">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -86,7 +86,7 @@ export const CourseHighlights: React.FC = () => {
         
         <div className="text-center mt-12">
           <Link to="/courses">
-            <Button variant="outline" size="lg" className="inline-flex items-center">
+            <Button variant="outline" size="lg" className="inline-flex items-center text-tactical-100 border-tactical-600 hover:bg-tactical-700 hover:text-white">
               View All Training Packages
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>

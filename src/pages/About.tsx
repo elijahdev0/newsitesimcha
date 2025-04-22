@@ -14,7 +14,7 @@ const About: React.FC = () => {
           <div 
             className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20"
             style={{ 
-              backgroundImage: 'url(https://images.pexels.com/photos/7988086/pexels-photo-7988086.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)' 
+              backgroundImage: 'url(https://static.vecteezy.com/system/resources/thumbnails/033/350/925/small_2x/wallpaper-dark-urban-surface-background-ai-generated-photo.jpg)' 
             }}
           />
           <div className="container mx-auto px-4 relative z-10">
@@ -24,7 +24,7 @@ const About: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-block text-accent-500 font-semibold mb-4 tracking-wider text-sm uppercase">
+              <span className="inline-block text-accent-400 font-semibold mb-4 tracking-wider text-sm uppercase">
                 Our Mission
               </span>
               <h1 className="font-heading text-4xl md:text-5xl font-bold text-white mb-6">
@@ -38,7 +38,7 @@ const About: React.FC = () => {
         </section>
 
         {/* Philosophy Section */}
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-tactical-900">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <motion.div
@@ -47,44 +47,44 @@ const About: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
                   Our Training Philosophy
                 </h2>
-                <p className="text-tactical-700 mb-4">
+                <p className="text-tactical-300 mb-4">
                   Unlike conventional training programs, we focus on real-world scenarios and adaptive techniques that work under stress. We don't teach theory—we teach what works when lives are on the line.
                 </p>
-                <p className="text-tactical-700 mb-8">
+                <p className="text-tactical-300 mb-8">
                   Our methodology combines military precision with practical application, making advanced tactical skills accessible to anyone committed to learning. Every technique we teach has been battle-tested in real combat situations.
                 </p>
 
                 <div className="space-y-6">
                   <div className="flex items-start">
-                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
-                      <Shield className="w-6 h-6 text-accent-500" />
+                    <div className="bg-tactical-800 p-3 rounded-lg mr-4">
+                      <Shield className="w-6 h-6 text-accent-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Authenticity</h3>
-                      <p className="text-tactical-600">Every technique we teach has been battle-tested in real combat situations.</p>
+                      <h3 className="font-semibold text-tactical-100 text-lg mb-1">Authenticity</h3>
+                      <p className="text-tactical-300">Every technique we teach has been battle-tested in real combat situations.</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
-                      <Target className="w-6 h-6 text-accent-500" />
+                    <div className="bg-tactical-800 p-3 rounded-lg mr-4">
+                      <Target className="w-6 h-6 text-accent-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Adaptability</h3>
-                      <p className="text-tactical-600">We train you to think tactically in any situation and adapt to any threat or environment.</p>
+                      <h3 className="font-semibold text-tactical-100 text-lg mb-1">Adaptability</h3>
+                      <p className="text-tactical-300">We train you to think tactically in any situation and adapt to any threat or environment.</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-tactical-100 p-3 rounded-lg mr-4">
-                      <Award className="w-6 h-6 text-accent-500" />
+                    <div className="bg-tactical-800 p-3 rounded-lg mr-4">
+                      <Award className="w-6 h-6 text-accent-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-tactical-900 text-lg mb-1">Excellence</h3>
-                      <p className="text-tactical-600">We maintain the highest standards in every aspect of our training.</p>
+                      <h3 className="font-semibold text-tactical-100 text-lg mb-1">Excellence</h3>
+                      <p className="text-tactical-300">We maintain the highest standards in every aspect of our training.</p>
                     </div>
                   </div>
                 </div>
@@ -97,13 +97,13 @@ const About: React.FC = () => {
                 transition={{ duration: 0.6 }}
               >
                 <div className="relative">
-                  <div className="absolute -top-4 -right-4 w-32 h-32 bg-accent-500/20 rounded-tr-lg z-0"></div>
+                  <div className="absolute -top-4 -right-4 w-32 h-32 bg-accent-400/10 rounded-tr-lg z-0"></div>
                   <img 
-                    src="https://images.pexels.com/photos/7988079/pexels-photo-7988079.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                    src="https://live.staticflickr.com/8598/16715030092_9cd1cd1a38_b.jpg" 
                     alt="Tactical Training"
                     className="rounded-lg shadow-xl relative z-10"
                   />
-                  <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent-500/20 rounded-bl-lg z-0"></div>
+                  <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent-400/10 rounded-bl-lg z-0"></div>
                 </div>
               </motion.div>
             </div>
@@ -111,35 +111,35 @@ const About: React.FC = () => {
         </section>
 
         {/* Instructor Background */}
-        <section className="py-16 bg-tactical-100">
+        <section className="py-16 bg-tactical-800">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-12">
-              <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+              <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
                 Meet Your Instructor
               </h2>
-              <p className="text-tactical-700">
+              <p className="text-tactical-300">
                 With over two decades of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
               </p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+            <div className="bg-tactical-700 rounded-xl shadow-xl overflow-hidden max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="h-64 md:h-auto">
                   <img 
-                    src="https://images.pexels.com/photos/4753879/pexels-photo-4753879.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                    src="https://i.imgur.com/nRmngdh.jpeg" 
                     alt="Instructor Menahem" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="p-8">
-                  <h3 className="font-heading text-2xl font-bold text-tactical-900 mb-4">Menahem</h3>
-                  <p className="text-accent-500 font-medium mb-4">Former Israeli Special Forces Commander</p>
+                  <h3 className="font-heading text-2xl font-bold text-tactical-100 mb-4">Menahem</h3>
+                  <p className="text-accent-400 font-medium mb-4">Former Israeli Special Forces Commander</p>
                   
-                  <p className="text-tactical-700 mb-6">
+                  <p className="text-tactical-300 mb-6">
                     Specializing in close-quarters combat, firearms training, and threat assessment, Menahem brings authentic battlefield expertise to every session, ensuring you receive real-world skills that can save lives.
                   </p>
                   
-                  <p className="text-tactical-700">
+                  <p className="text-tactical-300">
                     His training philosophy combines military precision with practical application, making advanced tactical skills accessible to anyone committed to learning.
                   </p>
                 </div>
@@ -149,110 +149,110 @@ const About: React.FC = () => {
         </section>
 
         {/* Who We Train */}
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-tactical-900">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-12">
-              <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+              <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
                 Who We Train
               </h2>
-              <p className="text-tactical-700">
+              <p className="text-tactical-300">
                 Our programs serve a diverse range of clients seeking elite-level tactical training. Whether you're a professional in the security sector or a civilian committed to personal defense, our training is tailored to your needs.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Security Professionals
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Executive protection specialists, security consultants, and corporate security teams looking to enhance tactical response capabilities.
                 </p>
               </motion.div>
 
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Law Enforcement
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Police officers, tactical units, and specialized law enforcement personnel seeking advanced combat training beyond standard department programs.
                 </p>
               </motion.div>
 
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Military Personnel
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Active duty and veterans looking to refine their tactical skills with specialized training from elite foreign special forces.
                 </p>
               </motion.div>
 
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Civilians
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Responsible civilians committed to high-level self-defense training and tactical firearms expertise.
                 </p>
               </motion.div>
 
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Firearms Enthusiasts
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Experienced shooters looking to train at an elite level with battlefield-proven techniques and tactical applications.
                 </p>
               </motion.div>
 
               <motion.div
-                className="bg-tactical-100 p-8 rounded-lg"
+                className="bg-tactical-800 p-8 rounded-lg"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
-                <Users className="w-10 h-10 text-accent-500 mb-4" />
-                <h3 className="font-heading text-xl font-bold text-tactical-900 mb-3">
+                <Users className="w-10 h-10 text-accent-400 mb-4" />
+                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-3">
                   Corporate Teams
                 </h3>
-                <p className="text-tactical-700">
+                <p className="text-tactical-300">
                   Leadership groups and executive teams seeking challenging experiences that build teamwork, decision-making skills, and resilience.
                 </p>
               </motion.div>
@@ -261,7 +261,7 @@ const About: React.FC = () => {
         </section>
 
         {/* Facility */}
-        <section className="py-16 bg-tactical-100">
+        <section className="py-16 bg-tactical-800">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <motion.div
@@ -271,7 +271,7 @@ const About: React.FC = () => {
                 transition={{ duration: 0.6 }}
               >
                 <img 
-                  src="https://images.pexels.com/photos/3727276/pexels-photo-3727276.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                  src="https://www.ffg-flensburg.de/fileadmin/_processed_/5/8/csm_Headerbild_Guez_1_f2a689d1a4.jpg" 
                   alt="S-Arms Shooting Range" 
                   className="rounded-lg shadow-xl"
                 />
@@ -283,36 +283,36 @@ const About: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 className="font-heading text-3xl font-bold text-tactical-900 mb-6">
+                <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
                   Our Training Facility
                 </h2>
-                <p className="text-tactical-700 mb-4">
+                <p className="text-tactical-300 mb-4">
                   Located at the S-Arms Shooting Range in Tallinn, Estonia, our training facility provides the perfect environment for tactical development with both indoor and outdoor training areas.
                 </p>
-                <p className="text-tactical-700 mb-8">
+                <p className="text-tactical-300 mb-8">
                   The facility features multiple shooting ranges, close-quarters battle rooms, tactical obstacle courses, and specialized training environments designed to simulate real-world scenarios.
                 </p>
 
                 <div className="space-y-4">
                   <div className="flex items-center">
-                    <span className="text-accent-500 mr-3">✓</span>
-                    <span className="text-tactical-800">Multiple shooting lanes with variable distances</span>
+                    <span className="text-accent-400 mr-3">✓</span>
+                    <span className="text-tactical-200">Multiple shooting lanes with variable distances</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-accent-500 mr-3">✓</span>
-                    <span className="text-tactical-800">CQB simulation rooms for tactical movement training</span>
+                    <span className="text-accent-400 mr-3">✓</span>
+                    <span className="text-tactical-200">CQB simulation rooms for tactical movement training</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-accent-500 mr-3">✓</span>
-                    <span className="text-tactical-800">Outdoor tactical ranges for dynamic shooting scenarios</span>
+                    <span className="text-accent-400 mr-3">✓</span>
+                    <span className="text-tactical-200">Outdoor tactical ranges for dynamic shooting scenarios</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-accent-500 mr-3">✓</span>
-                    <span className="text-tactical-800">Classroom facilities for tactical briefings</span>
+                    <span className="text-accent-400 mr-3">✓</span>
+                    <span className="text-tactical-200">Classroom facilities for tactical briefings</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-accent-500 mr-3">✓</span>
-                    <span className="text-tactical-800">Full equipment and firearms available for training</span>
+                    <span className="text-accent-400 mr-3">✓</span>
+                    <span className="text-tactical-200">Full equipment and firearms available for training</span>
                   </div>
                 </div>
               </motion.div>
