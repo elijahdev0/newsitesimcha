@@ -9,6 +9,8 @@ import { formatDate, formatCurrency } from '../../utils/formatters';
 import { useBookingStore } from '../../store/bookingStore';
 import { Booking, Course } from '../../types';
 import { courses } from '../../data/courses';
+import { Modal } from '../../components/common/Modal';
+import Courses from '../Courses';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Dashboard: React.FC = () => {
   const { getBookings } = useBookingStore();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -61,12 +64,10 @@ const Dashboard: React.FC = () => {
                   </p>
                 </div>
                 <div className="mt-4 md:mt-0">
-                  <Link to="/courses">
-                    <Button variant="accent">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Book New Training
-                    </Button>
-                  </Link>
+                  <Button variant="accent" onClick={() => setIsBookingModalOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Book New Training
+                  </Button>
                 </div>
               </div>
             </div>
@@ -243,6 +244,14 @@ const Dashboard: React.FC = () => {
         </div>
       </main>
       <Footer />
+
+      <Modal 
+        isOpen={isBookingModalOpen} 
+        onClose={() => setIsBookingModalOpen(false)}
+        title="Select Training Package"
+      >
+        <Courses showLayout={false} />
+      </Modal>
     </>
   );
 };

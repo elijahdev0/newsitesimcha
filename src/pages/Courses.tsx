@@ -6,7 +6,11 @@ import CourseComparisonTable from '../components/courses/CourseComparisonTable';
 import { courses } from '../data/courses';
 import { Button } from '../components/common/Button';
 
-const Courses: React.FC = () => {
+interface CoursesProps {
+  showLayout?: boolean; // Default to true
+}
+
+const Courses: React.FC<CoursesProps> = ({ showLayout = true }) => {
   const [filter, setFilter] = useState<string | null>(null);
 
   const filteredCourses = filter 
@@ -20,7 +24,7 @@ const Courses: React.FC = () => {
 
   return (
     <>
-      <Header />
+      {showLayout && <Header />}
       <main>
         {/* Hero Section - Already dark, adjusted accent */}
         <section className="relative pt-32 pb-16 bg-tactical-900">
@@ -249,7 +253,7 @@ const Courses: React.FC = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      {showLayout && <Footer />}
     </>
   );
 };
