@@ -1,312 +1,214 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Users, Package, Settings, Plus } from 'lucide-react';
-import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { Download, Users, CalendarPlus } from 'lucide-react';
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
-import { courseDates } from '../../data/dates';
 import { courses } from '../../data/courses';
-import { formatCurrency } from '../../utils/formatters';
+
+// --- Placeholder Data (Replace with actual data fetching later) ---
+interface UserStatus {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  filledForms: boolean;
+  paidDeposit: boolean;
+  paidInFull: boolean;
+  filesUploaded: boolean;
+}
+
+const dummyUsers: UserStatus[] = [
+  { id: 'usr_1', firstName: 'John', lastName: 'Doe', email: 'john.doe@email.com', phone: '555-1234', filledForms: true, paidDeposit: true, paidInFull: false, filesUploaded: true },
+  { id: 'usr_2', firstName: 'Jane', lastName: 'Smith', email: 'jane.s@email.com', phone: '555-5678', filledForms: true, paidDeposit: false, paidInFull: false, filesUploaded: false },
+  { id: 'usr_3', firstName: 'Bob', lastName: 'Johnson', email: 'bobby.j@email.com', phone: '555-9999', filledForms: false, paidDeposit: false, paidInFull: false, filesUploaded: false },
+];
+// --- End Placeholder Data ---
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'courses'>('upcoming');
 
-  // Fetch booking data
-  const upcomingTrainings = courseDates
-    .filter(date => new Date(date.startDate) >= new Date())
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    .slice(0, 10);
+  // State for user statuses (won't persist without backend)
+  const [userStatuses, setUserStatuses] = useState<UserStatus[]>(dummyUsers);
 
-  const getCourseById = (courseId: string) => {
-    return courses.find(course => course.id === courseId);
+  // State for course scheduling
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id || '');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
+  const handleCheckboxChange = (userId: string, statusKey: keyof Omit<UserStatus, 'id' | 'firstName' | 'lastName' | 'email' | 'phone'>) => {
+    setUserStatuses(prevStatuses =>
+      prevStatuses.map(u =>
+        u.id === userId ? { ...u, [statusKey]: !u[statusKey] } : u
+      )
+    );
+    // TODO: Add backend call to update status
+    console.log(`Status "${statusKey}" changed for user ${userId}`);
+  };
+
+  const handleScheduleCourse = () => {
+    if (!selectedCourseId || !startDate || !endDate) {
+      alert('Please select a course and both start and end dates.');
+      return;
+    }
+    // TODO: Add backend call to schedule the date
+    console.log(`Scheduling course ${selectedCourseId} from ${startDate} to ${endDate}`);
+    alert(`Course ${courses.find(c => c.id === selectedCourseId)?.title} scheduled! (Check console)`);
+    // Optionally reset fields
+    // setSelectedCourseId(courses[0]?.id || '');
+    // setStartDate('');
+    // setEndDate('');
+  };
+
+  const handleDownloadFiles = (userId: string) => {
+    // TODO: Add backend call to initiate file download for the user
+    console.log(`Initiating file download for user ${userId}`);
+    alert(`File download initiated for user ${userId}. (Check console)`);
   };
 
   if (!isAuthenticated || user?.role !== 'admin') {
     navigate('/login');
-    return null;
+    return null; // Render nothing while redirecting
   }
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 space-y-8">
+
           {/* Admin Header */}
-          <div className="bg-tactical-900 text-white rounded-xl p-8 mb-8 shadow-lg">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div>
-                <h1 className="text-2xl font-heading font-bold mb-2">
-                  Admin Dashboard
-                </h1>
-                <p className="text-gray-300">
-                  Manage courses, dates, and user bookings for Elite Tactical Training.
-                </p>
-              </div>
-              <div className="flex gap-3 mt-4 md:mt-0">
-                <Link to="/admin/courses/new">
-                  <Button variant="outline" className="border-white/30 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Course
-                  </Button>
-                </Link>
-                <Link to="/admin/dates/new">
-                  <Button variant="accent">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Training Date
-                  </Button>
-                </Link>
-              </div>
-            </div>
+          <div className="bg-tactical-900 text-white rounded-xl p-6 shadow-lg">
+            <h1 className="text-2xl font-heading font-bold">Admin Dashboard</h1>
+            <p className="text-gray-300 text-sm">User status overview and course scheduling.</p>
           </div>
 
-          {/* Dashboard Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="bg-tactical-800 text-white p-4">
-                  <h2 className="font-medium">Admin Menu</h2>
-                </div>
-                <div className="divide-y">
-                  <button 
-                    className={`w-full text-left px-4 py-3 flex items-center hover:bg-tactical-50 transition-colors ${activeTab === 'upcoming' ? 'bg-tactical-100 font-medium' : ''}`}
-                    onClick={() => setActiveTab('upcoming')}
-                  >
-                    <Calendar className="w-5 h-5 mr-3 text-tactical-700" />
-                    <span>Upcoming Trainings</span>
-                  </button>
-                  <button 
-                    className={`w-full text-left px-4 py-3 flex items-center hover:bg-tactical-50 transition-colors ${activeTab === 'courses' ? 'bg-tactical-100 font-medium' : ''}`}
-                    onClick={() => setActiveTab('courses')}
-                  >
-                    <Package className="w-5 h-5 mr-3 text-tactical-700" />
-                    <span>Manage Courses</span>
-                  </button>
-                  <Link 
-                    to="/admin/settings" 
-                    className="w-full text-left px-4 py-3 flex items-center hover:bg-tactical-50 transition-colors"
-                  >
-                    <Settings className="w-5 h-5 mr-3 text-tactical-700" />
-                    <span>Settings</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 mt-6">
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                  <div className="flex items-center mb-2">
-                    <Calendar className="w-5 h-5 text-accent-500 mr-2" />
-                    <h3 className="font-medium text-tactical-900">Upcoming Sessions</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-tactical-900">
-                    {courseDates.filter(date => new Date(date.startDate) >= new Date()).length}
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                  <div className="flex items-center mb-2">
-                    <Users className="w-5 h-5 text-accent-500 mr-2" />
-                    <h3 className="font-medium text-tactical-900">Total Bookings</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-tactical-900">
-                    {courseDates.reduce((sum, date) => sum + date.currentParticipants, 0)}
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                  <div className="flex items-center mb-2">
-                    <Package className="w-5 h-5 text-accent-500 mr-2" />
-                    <h3 className="font-medium text-tactical-900">Active Courses</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-tactical-900">
-                    {courses.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              {/* Upcoming Trainings */}
-              {activeTab === 'upcoming' && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="font-heading text-xl font-bold text-tactical-900">
-                      Upcoming Training Sessions
-                    </h2>
-                    <Link to="/admin/calendar">
-                      <Button variant="outline" size="sm">
-                        View Calendar
-                      </Button>
-                    </Link>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-tactical-50">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-tactical-700 uppercase tracking-wider">
-                            Course
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-tactical-700 uppercase tracking-wider">
-                            Dates
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-tactical-700 uppercase tracking-wider">
-                            Participants
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-tactical-700 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-tactical-700 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {upcomingTrainings.length > 0 ? (
-                          upcomingTrainings.map((date) => {
-                            const course = getCourseById(date.courseId);
-                            const startDate = new Date(date.startDate);
-                            const endDate = new Date(date.endDate);
-                            const isStartingSoon = startDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                            
-                            return (
-                              <tr key={date.id} className="hover:bg-tactical-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="font-medium text-tactical-900">{course?.title}</div>
-                                  <div className="text-sm text-tactical-600">{formatCurrency(course?.price || 0)}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-tactical-900">{format(startDate, 'MMM d, yyyy')}</div>
-                                  <div className="text-sm text-tactical-600">to {format(endDate, 'MMM d, yyyy')}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex items-center">
-                                    <Users className="w-4 h-4 text-tactical-500 mr-2" />
-                                    <span>{date.currentParticipants}/{date.maxParticipants}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                    <div 
-                                      className={`h-1.5 rounded-full ${
-                                        date.currentParticipants / date.maxParticipants > 0.8 
-                                          ? 'bg-green-600' 
-                                          : 'bg-accent-500'
-                                      }`} 
-                                      style={{ width: `${(date.currentParticipants / date.maxParticipants) * 100}%` }}
-                                    ></div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    isStartingSoon 
-                                      ? 'bg-yellow-100 text-yellow-800' 
-                                      : 'bg-green-100 text-green-800'
-                                  }`}>
-                                    {isStartingSoon ? 'Starting Soon' : 'Scheduled'}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                  <Link to={`/admin/dates/${date.id}`} className="text-accent-600 hover:text-accent-900 mr-3">
-                                    Edit
-                                  </Link>
-                                  <Link to={`/admin/dates/${date.id}/participants`} className="text-accent-600 hover:text-accent-900">
-                                    View Participants
-                                  </Link>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={5} className="px-6 py-10 text-center text-tactical-600">
-                              No upcoming training sessions found.
-                            </td>
-                          </tr>
+          {/* Section 1: User Status Management */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4 flex items-center">
+              <Users className="w-5 h-5 mr-2 text-accent-500" />
+              User Status Overview
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-tactical-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">User</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Contact</th>
+                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Forms</th>
+                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Deposit</th>
+                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Paid Full</th>
+                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Files</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {userStatuses.map((u) => (
+                    <tr key={u.id}>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-medium text-tactical-900">{u.firstName} {u.lastName}</div>
+                      </td>
+                       <td className="px-4 py-3 whitespace-nowrap text-sm text-tactical-600">
+                         <div>{u.email}</div>
+                         <div>{u.phone}</div>
+                        </td>
+                      <td className="px-2 py-3 text-center">
+                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                          checked={u.filledForms} onChange={() => handleCheckboxChange(u.id, 'filledForms')} />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                          checked={u.paidDeposit} onChange={() => handleCheckboxChange(u.id, 'paidDeposit')} />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                          checked={u.paidInFull} onChange={() => handleCheckboxChange(u.id, 'paidInFull')} />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                          checked={u.filesUploaded} onChange={() => handleCheckboxChange(u.id, 'filesUploaded')} />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {u.filesUploaded && (
+                          <Button variant="ghost" size="sm" onClick={() => handleDownloadFiles(u.id)}>
+                            <Download className="w-4 h-4 mr-1" />
+                            Download Files
+                          </Button>
                         )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Manage Courses */}
-              {activeTab === 'courses' && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="font-heading text-xl font-bold text-tactical-900">
-                      Manage Course Packages
-                    </h2>
-                    <Link to="/admin/courses/new">
-                      <Button variant="primary" size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add New Course
-                      </Button>
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {courses.map(course => (
-                      <div 
-                        key={course.id}
-                        className="border border-gray-200 rounded-lg p-5 hover:border-tactical-300 transition-all"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-heading font-semibold text-lg text-tactical-900">
-                              {course.title}
-                            </h3>
-                            <div className="text-xl font-bold text-tactical-900 mt-1">
-                              {formatCurrency(course.price)}
-                            </div>
-                          </div>
-                          {course.isPopular && (
-                            <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full">
-                              Popular
-                            </span>
-                          )}
-                        </div>
-                        
-                        <p className="text-tactical-600 text-sm mb-4 line-clamp-2">
-                          {course.description}
-                        </p>
-                        
-                        <div className="flex gap-2 mb-4">
-                          <span className="bg-tactical-100 text-tactical-800 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                            {course.duration} days
-                          </span>
-                          <span className="bg-tactical-100 text-tactical-800 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                            {course.rounds} rounds
-                          </span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center mt-4">
-                          <div className="flex items-center text-tactical-600 text-sm">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>Last updated: {format(new Date(), 'MMM d, yyyy')}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Link to={`/admin/courses/${course.id}`}>
-                              <Button variant="outline" size="sm">
-                                Edit
-                              </Button>
-                            </Link>
-                            <Link to={`/admin/courses/${course.id}/dates`}>
-                              <Button variant="ghost" size="sm">
-                                Manage Dates
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
+
+          {/* Section 2: Course Date Scheduling */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4 flex items-center">
+              <CalendarPlus className="w-5 h-5 mr-2 text-accent-500" />
+              Schedule New Course Date
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              {/* Course Dropdown */}
+              <div className="md:col-span-2">
+                <label htmlFor="courseSelect" className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Course
+                </label>
+                <select
+                  id="courseSelect"
+                  value={selectedCourseId}
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-accent-500 focus:border-accent-500 sm:text-sm rounded-md shadow-sm"
+                >
+                  {courses.map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-accent-500 focus:ring-accent-500 sm:text-sm py-2 px-3"
+                />
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-accent-500 focus:ring-accent-500 sm:text-sm py-2 px-3"
+                />
+              </div>
+
+              {/* Schedule Button */}
+              <div className="md:col-span-4 flex justify-end mt-4">
+                 <Button variant="primary" onClick={handleScheduleCourse}>
+                   Schedule Course Date
+                 </Button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
       <Footer />
