@@ -236,11 +236,6 @@ const Dashboard: React.FC = () => {
                       Contact Support
                     </Button>
                   </Link>
-                  <Link to="/faq">
-                    <Button variant="ghost" fullWidth>
-                      View FAQs
-                    </Button>
-                  </Link>
                 </div>
               </div>
             </div>

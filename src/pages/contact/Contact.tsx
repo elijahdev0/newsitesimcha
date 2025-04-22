@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
-import { Mail, MessageSquare, MapPin, HelpCircle, Search } from 'lucide-react';
+import { Mail, MessageSquare, MapPin, Search } from 'lucide-react';
 
 const Contact: React.FC = () => {
   const whatsappNumber = '447982369701';
@@ -85,17 +85,11 @@ const Contact: React.FC = () => {
         {/* Alternative Actions Section */}
         <section className="py-16 bg-tactical-100">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-heading font-bold text-tactical-900 mb-4">Looking for Quick Answers?</h2>
+            <h2 className="text-2xl font-heading font-bold text-tactical-900 mb-4">Ready to Train?</h2>
             <p className="text-tactical-700 mb-8 max-w-2xl mx-auto">
-              Check our Frequently Asked Questions or browse our available training packages for more information.
+              Explore our comprehensive tactical training packages to find the perfect fit for your needs.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/faq"> {/* Assuming /faq route exists or will be created */}
-                <Button variant="secondary" className="w-full sm:w-auto">
-                  <HelpCircle className="w-5 h-5 mr-2" />
-                  View FAQs
-                </Button>
-              </Link>
               <Link to="/courses">
                 <Button variant="primary" className="w-full sm:w-auto">
                   <Search className="w-5 h-5 mr-2" />
