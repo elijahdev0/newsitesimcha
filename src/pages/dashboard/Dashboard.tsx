@@ -12,6 +12,7 @@ import { courses } from '../../data/courses';
 import { Modal } from '../../components/common/Modal';
 import Courses from '../Courses';
 import { BookingInformationForm } from '../../components/dashboard/BookingInformationForm';
+import { UploadDocumentForm } from '../../components/dashboard/UploadDocumentForm';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ const Dashboard: React.FC = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isInfoFormModalOpen, setIsInfoFormModalOpen] = useState(false);
   const [selectedBookingIdForForm, setSelectedBookingIdForForm] = useState<string | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedBookingIdForUpload, setSelectedBookingIdForUpload] = useState<string | null>(null);
 
   // Load Calendly script
   useEffect(() => {
@@ -86,11 +89,35 @@ const Dashboard: React.FC = () => {
     // Mark form as filled (update booking state - this is a mock update)
     // You'll need a way to actually update the booking status based on the API response
     // and potentially update the 'isFormFilled' flag on the specific booking
-    setBookings(prevBookings => prevBookings.map(b =>
+    setBookings(prevBookings => prevBookings.map((b: Booking) =>
       b.id === formData.bookingId ? { ...b, /* isFormFilled: true */ } : b // Update actual status flag later
     ));
     closeInfoFormModal(); // Close modal after submission
     alert('Information form submitted! (Mock update - status change is temporary)');
+  };
+
+  // --- Upload Modal Handlers ---
+  const openUploadModal = (bookingId: string) => {
+    setSelectedBookingIdForUpload(bookingId);
+    setIsUploadModalOpen(true);
+  };
+
+  const closeUploadModal = () => {
+    setIsUploadModalOpen(false);
+    setSelectedBookingIdForUpload(null);
+  };
+
+  // Placeholder function to handle document upload submission
+  // TODO: Replace with actual upload logic (e.g., API call)
+  const handleDocumentUploadSubmit = (bookingId: string, file: File) => {
+    console.log('Uploading document for booking:', bookingId, '; File:', file.name);
+    // Mock update: Mark docs as uploaded for the specific booking
+    // In a real app, you'd wait for the API response before updating state
+    setBookings(prevBookings => prevBookings.map((b: Booking) =>
+      b.id === bookingId ? { ...b, /* isDocsUploaded: true */ } : b // Update actual status flag later
+    ));
+    closeUploadModal();
+    alert(`Document '${file.name}' upload initiated! (Mock update)`);
   };
 
   // --- Data Fetching ---
@@ -291,7 +318,12 @@ const Dashboard: React.FC = () => {
                               <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto mt-auto justify-start md:justify-end">
                                 {/* Conditionally show buttons based on mock status */}
                                 {!isDocsUploaded && (
-                                  <Button variant="outline" size="sm" onClick={() => alert(`Mock: Upload Docs for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openUploadModal(booking.id)}
+                                    className="flex-grow md:flex-grow-0 justify-center"
+                                  >
                                     <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Docs
                                   </Button>
                                 )}
@@ -435,6 +467,21 @@ const Dashboard: React.FC = () => {
             bookingId={selectedBookingIdForForm}
             onClose={closeInfoFormModal}
             onSubmit={handleInformationFormSubmit}
+          />
+        )}
+      </Modal>
+
+      {/* Upload Document Modal */}
+      <Modal
+        isOpen={isUploadModalOpen}
+        onClose={closeUploadModal}
+        title="Upload Criminal Background Check"
+      >
+        {selectedBookingIdForUpload && (
+          <UploadDocumentForm
+            bookingId={selectedBookingIdForUpload}
+            onClose={closeUploadModal}
+            onSubmit={handleDocumentUploadSubmit}
           />
         )}
       </Modal>
