@@ -83,6 +83,9 @@ export const Footer: React.FC = () => {
               <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>
           </div>
+          <div className="mt-4 text-center text-xs text-gray-500">
+            Designed by <a href="https://elimalka.dev" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-500">Eli Malka</a> with care
+          </div>
         </div>
       </div>
     </footer>
