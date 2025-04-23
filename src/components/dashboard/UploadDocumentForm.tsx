@@ -5,10 +5,11 @@ import { UploadCloud, File, ShieldCheck, AlertTriangle } from 'lucide-react';
 interface UploadDocumentFormProps {
   bookingId: string;
   onClose: () => void;
-  onSubmit: (bookingId: string, file: File) => void; // Function to handle the actual upload
+  uploadFile: (bookingId: string, file: File) => void; // Renamed from onSubmit
+  isSubmitting: boolean;
 }
 
-export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({ bookingId, onClose, onSubmit }) => {
+export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({ bookingId, onClose, uploadFile, isSubmitting = false }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,10 +48,11 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({ bookingI
       setError('Please select a file to upload.');
       return;
     }
-    // Call the passed onSubmit function to handle the actual upload logic
-    onSubmit(bookingId, selectedFile);
+    // Call the passed uploadFile function to handle the actual upload logic
+    uploadFile(bookingId, selectedFile); // Changed from onSubmit
     // Optionally close modal immediately or wait for onSubmit to finish
-    // onClose(); 
+    // onClose();
+    // Keep the alert for now, or remove if the parent handles feedback
     alert('Upload initiated (placeholder - check console). In a real app, this would upload the file.');
   };
 
@@ -134,10 +136,10 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({ bookingI
           type="button"
           variant="primary" // Or use 'accent' if preferred
           onClick={handleUploadClick}
-          disabled={!selectedFile} // Disable if no file is selected
+          disabled={!selectedFile || isSubmitting} // Disable if no file is selected or loading
         >
           <UploadCloud className="w-4 h-4 mr-2" />
-          Upload Document
+          {isSubmitting ? 'Uploading...' : 'Upload Document'}
         </Button>
       </div>
     </div>

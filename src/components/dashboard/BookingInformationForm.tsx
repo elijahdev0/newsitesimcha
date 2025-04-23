@@ -8,6 +8,7 @@ interface BookingInformationFormProps {
   bookingId: string;
   onClose: () => void;
   onSubmit: (formData: any) => void; // Replace 'any' with a proper type later
+  isSubmitting?: boolean; // Add this prop for loading state
 }
 
 // Helper component for form sections
@@ -18,7 +19,7 @@ const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({ t
   </div>
 );
 
-export const BookingInformationForm: React.FC<BookingInformationFormProps> = ({ bookingId, onClose, onSubmit }) => {
+export const BookingInformationForm: React.FC<BookingInformationFormProps> = ({ bookingId, onClose, onSubmit, isSubmitting = false }) => {
   // --- State for Form Fields ---
   // Personal Details
   const [firstName, setFirstName] = useState('');
@@ -305,8 +306,8 @@ export const BookingInformationForm: React.FC<BookingInformationFormProps> = ({ 
         <Button type="button" variant="outline" onClick={onClose} className="border-tactical-600 text-tactical-300 hover:bg-tactical-700 hover:text-white">
           Cancel
         </Button>
-        <Button type="submit" variant="primary">
-          Submit Information
+        <Button type="submit" variant="primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit Information'}
         </Button>
       </div>
     </form>

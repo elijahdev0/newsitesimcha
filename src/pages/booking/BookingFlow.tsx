@@ -12,7 +12,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useBookingStore } from '../../store/bookingStore';
 import { formatCurrency } from '../../utils/formatters';
 import { extras } from '../../data/courses';
-import { Course, CourseDate, Extra, BookingExtra } from '../../types';
+import { CourseDate, Extra, BookingExtra } from '../../types';
 
 // Interface for Course data fetched from Supabase (removed slug)
 interface SupabaseCourse {

@@ -9,6 +9,95 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      booking_details: {
+        Row: {
+          address: string | null
+          birthday: string | null
+          booking_id: string
+          city: string | null
+          country: string | null
+          created_at: string
+          dietary_restrictions_details: string | null
+          email: string | null
+          emergency_name: string | null
+          emergency_phone: string | null
+          emergency_relationship: string | null
+          first_name: string | null
+          has_dietary_restrictions: boolean | null
+          has_medical_conditions: boolean | null
+          id: string
+          last_name: string | null
+          medical_conditions_details: string | null
+          medications_details: string | null
+          phone: string | null
+          signature_date: string | null
+          signature_name: string | null
+          takes_medications: boolean | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          birthday?: string | null
+          booking_id: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dietary_restrictions_details?: string | null
+          email?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
+          first_name?: string | null
+          has_dietary_restrictions?: boolean | null
+          has_medical_conditions?: boolean | null
+          id?: string
+          last_name?: string | null
+          medical_conditions_details?: string | null
+          medications_details?: string | null
+          phone?: string | null
+          signature_date?: string | null
+          signature_name?: string | null
+          takes_medications?: boolean | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          birthday?: string | null
+          booking_id?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          dietary_restrictions_details?: string | null
+          email?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
+          first_name?: string | null
+          has_dietary_restrictions?: boolean | null
+          has_medical_conditions?: boolean | null
+          id?: string
+          last_name?: string | null
+          medical_conditions_details?: string | null
+          medications_details?: string | null
+          phone?: string | null
+          signature_date?: string | null
+          signature_name?: string | null
+          takes_medications?: boolean | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_details_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_extras: {
         Row: {
           booking_id: string
@@ -53,6 +142,7 @@ export type Database = {
           course_date_id: string
           course_id: string
           created_at: string
+          document_path: string | null
           files_uploaded: boolean
           forms_filled: boolean
           id: string
@@ -66,6 +156,7 @@ export type Database = {
           course_date_id: string
           course_id: string
           created_at?: string
+          document_path?: string | null
           files_uploaded?: boolean
           forms_filled?: boolean
           id?: string
@@ -79,6 +170,7 @@ export type Database = {
           course_date_id?: string
           course_id?: string
           created_at?: string
+          document_path?: string | null
           files_uploaded?: boolean
           forms_filled?: boolean
           id?: string

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -11,147 +11,258 @@ import {
   FileText,
   CreditCard,
   CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { formatDate, formatCurrency } from '../../utils/formatters';
-import { useBookingStore } from '../../store/bookingStore';
 import { Booking, Course } from '../../types';
 import { courses } from '../../data/courses';
 import { Modal } from '../../components/common/Modal';
 import Courses from '../Courses';
 import { BookingInformationForm } from '../../components/dashboard/BookingInformationForm';
 import { UploadDocumentForm } from '../../components/dashboard/UploadDocumentForm';
-import { supabase } from '../../lib/supabase'; // Import Supabase client
+import { supabase } from '../../lib/supabase';
 
 // Use generated types for Supabase data
-// import { Tables } from '../../supabase/schema_types'; // Remove this incorrect path
-import { Tables } from '../../../supabase/schema_types'; // Correct path from src/pages/dashboard to root/supabase
+import { Tables, TablesInsert } from '../../../supabase/schema_types';
 type SupabaseBooking = Tables<'bookings'>;
+// Define a more specific type for the component's booking state, including optional fields
+interface DashboardBooking extends Booking {
+  formsFilled?: boolean; // Make optional as it comes from DB
+  filesUploaded?: boolean; // Make optional as it comes from DB
+  documentPath?: string | null; // Add field for document path
+}
+type BookingDetailsInsert = TablesInsert<'booking_details'>;
+
+// Define a type for the form data structure expected by handleInformationFormSubmit
+// This improves type safety compared to 'any'
+interface BookingFormData {
+  bookingId: string;
+  personal: {
+    firstName: string;
+    lastName: string;
+    birthday: string;
+    country: string;
+    address: string;
+    city: string;
+    zipCode: string;
+    phone: string;
+    email: string;
+  };
+  emergencyContact: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  medical: {
+    hasConditions: boolean | null;
+    conditionsDetails: string;
+    takesMedications: boolean | null;
+    medicationsDetails: string;
+    hasDietaryRestrictions: boolean | null;
+    dietaryRestrictionsDetails: string;
+  };
+  signature: {
+    name: string;
+    date: string;
+  };
+}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
-  const { getBookings } = useBookingStore();
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<DashboardBooking[]>([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isInfoFormModalOpen, setIsInfoFormModalOpen] = useState(false);
   const [selectedBookingIdForForm, setSelectedBookingIdForForm] = useState<string | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedBookingIdForUpload, setSelectedBookingIdForUpload] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load Calendly script
   useEffect(() => {
     const scriptId = 'calendly-widget-script';
-    if (document.getElementById(scriptId)) return; // Prevent duplicate script loading
+    if (document.getElementById(scriptId)) return;
 
     const script = document.createElement('script');
     script.id = scriptId;
     script.src = 'https://assets.calendly.com/assets/external/widget.js';
     script.async = true;
     document.body.appendChild(script);
-
-    // Optional: Cleanup function if needed, though script load is usually fine globally
-    // return () => { ... };
   }, []);
 
+  // Fetch user bookings function, wrapped in useCallback
+  const fetchUserBookings = useCallback(async () => {
+    if (!user?.id) return; // Guard clause if user id is not available
+
+    setIsLoadingBookings(true);
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*') // Select all columns
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase fetch bookings error:', error);
+        throw error;
+      }
+
+      // Map Supabase data (snake_case) to component state type (camelCase)
+      const formattedBookings: DashboardBooking[] = (data || []).map((dbBooking: SupabaseBooking) => ({
+        id: dbBooking.id,
+        userId: dbBooking.user_id,
+        courseId: dbBooking.course_id,
+        courseDateId: dbBooking.course_date_id,
+        status: dbBooking.status as Booking['status'],
+        paymentStatus: dbBooking.payment_status as Booking['paymentStatus'],
+        totalAmount: dbBooking.total_amount,
+        createdAt: dbBooking.created_at,
+        extras: [], // Extras are not directly fetched here, initialize as empty
+        formsFilled: dbBooking.forms_filled, // Read actual value
+        filesUploaded: dbBooking.files_uploaded, // Read actual value
+        documentPath: dbBooking.document_path, // Read document path
+      }));
+
+      setBookings(formattedBookings);
+
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setBookings([]);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  // Add user.id to dependency array
+  }, [user?.id]);
+
+  // Effect to fetch bookings when auth state changes or user ID becomes available
   useEffect(() => {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
         navigate('/login');
-      } else if (user?.id) { // Check for user.id here
-        const fetchUserBookings = async () => {
-          setIsLoadingBookings(true);
-          try {
-            // Fetch directly from Supabase, filtering by user ID
-            const { data, error } = await supabase
-              .from('bookings')
-              .select('*') // Select all columns for now
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false }); // Show newest first
-
-            if (error) {
-              console.error('Supabase fetch bookings error:', error);
-              throw error;
-            }
-
-            // Map Supabase data (snake_case) to component state type (camelCase)
-            const formattedBookings: Booking[] = (data || []).map((dbBooking: SupabaseBooking) => ({
-              id: dbBooking.id,
-              userId: dbBooking.user_id,
-              courseId: dbBooking.course_id,
-              courseDateId: dbBooking.course_date_id,
-              status: dbBooking.status as Booking['status'], // Assert type for status
-              paymentStatus: dbBooking.payment_status as Booking['paymentStatus'], // Assert type for paymentStatus
-              totalAmount: dbBooking.total_amount,
-              createdAt: dbBooking.created_at,
-              // extras are not directly fetched here, initialize as empty
-              extras: [],
-              // Add mapping for other fields if they exist in your Booking type
-              // formsFilled: dbBooking.forms_filled, // Uncomment if Booking type has formsFilled
-              // filesUploaded: dbBooking.files_uploaded, // Uncomment if Booking type has filesUploaded
-            }));
-
-            setBookings(formattedBookings);
-
-          } catch (error) {
-            // Error handling already present
-            console.error('Error fetching bookings:', error);
-            setBookings([]); // Clear bookings on error
-          } finally {
-            setIsLoadingBookings(false);
-          }
-        };
-        fetchUserBookings();
       } else {
-         // Handle case where user exists but ID is missing (shouldn't happen often)
-         setIsLoadingBookings(false);
-         console.warn('User authenticated but ID missing, cannot fetch bookings.');
-         setBookings([]);
+        fetchUserBookings(); // Call the memoized fetch function
       }
     }
-  // Update dependency array: remove getBookings, add user
-  }, [isAuthLoading, isAuthenticated, user, navigate]);
+  // Update dependencies
+  }, [isAuthLoading, isAuthenticated, user?.id, navigate, fetchUserBookings]);
 
   const getCourseById = (courseId: string): Course | undefined => {
+    // Assuming 'courses' is static data from '../../data/courses'
+    // If courses were dynamic, they'd need fetching too.
+    // This finds the course details based on the courseId stored in the booking.
+    // TODO: Ensure the Course type in types/index.ts matches the data structure in data/courses.ts
     return courses.find(course => course.id === courseId);
   };
 
   const showOverallLoading = isAuthLoading || isLoadingBookings;
 
   // --- Modal Handlers ---
-
-  // Helper function to open the info form modal
   const openInfoFormModal = (bookingId: string) => {
+    setFormError(null); // Clear previous errors
     setSelectedBookingIdForForm(bookingId);
     setIsInfoFormModalOpen(true);
   };
 
-  // Helper function to close the info form modal
   const closeInfoFormModal = () => {
     setIsInfoFormModalOpen(false);
     setSelectedBookingIdForForm(null);
+    setFormError(null); // Clear errors on close
   };
 
-  // Placeholder function to handle form submission
-  // TODO: Replace with actual submission logic (e.g., API call to update booking)
-  const handleInformationFormSubmit = (formData: any) => {
-    console.log('Received form data in Dashboard:', formData);
-    // Mark form as filled (update booking state - this is a mock update)
-    // You'll need a way to actually update the booking status based on the API response
-    // and potentially update the 'isFormFilled' flag on the specific booking
-    setBookings(prevBookings => prevBookings.map((b: Booking) =>
-      b.id === formData.bookingId ? { ...b, /* isFormFilled: true */ } : b // Update actual status flag later
-    ));
-    closeInfoFormModal(); // Close modal after submission
-    alert('Information form submitted! (Mock update - status change is temporary)');
+  // --- Actual implementation for handleInformationFormSubmit ---
+  const handleInformationFormSubmit = async (formData: BookingFormData) => {
+    if (!selectedBookingIdForForm) {
+        setFormError("Cannot submit form: Booking ID is missing.");
+        return;
+    }
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+       // 1. Prepare data for booking_details table
+       const detailsData: Omit<BookingDetailsInsert, 'id' | 'created_at' | 'updated_at'> = {
+            booking_id: selectedBookingIdForForm,
+            // Map personal details
+            first_name: formData.personal.firstName,
+            last_name: formData.personal.lastName,
+            birthday: formData.personal.birthday || null, // Handle empty string dates
+            country: formData.personal.country,
+            address: formData.personal.address,
+            city: formData.personal.city,
+            zip_code: formData.personal.zipCode,
+            phone: formData.personal.phone,
+            email: formData.personal.email,
+            // Map emergency contact
+            emergency_name: formData.emergencyContact.name,
+            emergency_relationship: formData.emergencyContact.relationship,
+            emergency_phone: formData.emergencyContact.phone,
+            // Map medical info
+            has_medical_conditions: formData.medical.hasConditions,
+            medical_conditions_details: formData.medical.conditionsDetails,
+            takes_medications: formData.medical.takesMedications,
+            medications_details: formData.medical.medicationsDetails,
+            has_dietary_restrictions: formData.medical.hasDietaryRestrictions,
+            dietary_restrictions_details: formData.medical.dietaryRestrictionsDetails,
+            // Map signature
+            signature_name: formData.signature.name,
+            signature_date: formData.signature.date || null, // Handle empty string dates
+        };
+
+      // 2. Insert into booking_details
+      const { error: detailsError } = await supabase
+        .from('booking_details')
+        .insert(detailsData);
+
+      if (detailsError) {
+        // Handle potential unique constraint violation (form already submitted)
+        if (detailsError.code === '23505') { // PostgreSQL unique violation code
+            // Optionally update existing details instead of failing
+            console.warn('Booking details already exist for this booking. Consider updating instead.', detailsError);
+            // For now, we'll proceed to update the booking status regardless
+        } else {
+            console.error('Error inserting booking details:', detailsError);
+            throw new Error(`Failed to save form details: ${detailsError.message}`);
+        }
+      }
+
+      // 3. Update bookings table to mark form as filled
+      const { error: bookingUpdateError } = await supabase
+        .from('bookings')
+        .update({ forms_filled: true, updated_at: new Date().toISOString() })
+        .eq('id', selectedBookingIdForForm);
+
+      if (bookingUpdateError) {
+        console.error('Error updating booking status:', bookingUpdateError);
+        // Consider how to handle this - maybe the details were saved but status update failed?
+        throw new Error(`Failed to update booking status: ${bookingUpdateError.message}`);
+      }
+
+      // 4. Success: Update local state immediately for better UX
+       setBookings(prevBookings => prevBookings.map(b =>
+         b.id === selectedBookingIdForForm ? { ...b, formsFilled: true } : b
+       ));
+
+      closeInfoFormModal(); // Close modal on success
+      // Optionally show a success message
+
+    } catch (error: any) {
+      console.error('Form submission failed:', error);
+      setFormError(error.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // --- Upload Modal Handlers ---
   const openUploadModal = (bookingId: string) => {
+    setUploadError(null); // Clear previous errors
     setSelectedBookingIdForUpload(bookingId);
     setIsUploadModalOpen(true);
   };
@@ -159,19 +270,83 @@ const Dashboard: React.FC = () => {
   const closeUploadModal = () => {
     setIsUploadModalOpen(false);
     setSelectedBookingIdForUpload(null);
+    setUploadError(null); // Clear errors on close
   };
 
-  // Placeholder function to handle document upload submission
-  // TODO: Replace with actual upload logic (e.g., API call)
-  const handleDocumentUploadSubmit = (bookingId: string, file: File) => {
-    console.log('Uploading document for booking:', bookingId, '; File:', file.name);
-    // Mock update: Mark docs as uploaded for the specific booking
-    // In a real app, you'd wait for the API response before updating state
-    setBookings(prevBookings => prevBookings.map((b: Booking) =>
-      b.id === bookingId ? { ...b, /* isDocsUploaded: true */ } : b // Update actual status flag later
-    ));
-    closeUploadModal();
-    alert(`Document '${file.name}' upload initiated! (Mock update)`);
+  // --- Actual implementation for handleDocumentUploadSubmit ---
+  const handleDocumentUploadSubmit = async (bookingId: string, file: File) => {
+    if (!user?.id) {
+        setUploadError("User not identified. Cannot upload file.");
+        return;
+    }
+    if (!bookingId) {
+        setUploadError("Cannot upload document: Booking ID is missing.");
+        return;
+    }
+
+    setIsSubmitting(true);
+    setUploadError(null);
+
+    try {
+      // 1. Create a unique file path
+      // Ensure file name is sanitized (basic example)
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `public/${user.id}/${bookingId}-${Date.now()}-${sanitizedFileName}`;
+      const bucketName = 'docs'; // Define bucket name
+
+      // 2. Upload file to Supabase Storage
+      // Ensure bucket 'docs' exists in your Supabase project with appropriate policies.
+      // Typically, make the bucket public for reads if needed, or create signed URLs.
+      // For uploads, ensure authenticated users have insert permissions.
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          // cacheControl: '3600', // Optional: Cache control header
+          upsert: false, // Set to true to overwrite existing file with same path, false to fail
+        });
+
+      if (uploadError) {
+        console.error('Supabase Storage upload error:', uploadError);
+        throw new Error(`File upload failed: ${uploadError.message}`);
+      }
+
+      if (!uploadData?.path) {
+          throw new Error('File upload succeeded but did not return a path.');
+      }
+
+      const documentPath = uploadData.path; // Get the path relative to the bucket
+
+      // 3. Update bookings table with document path and status
+      const { error: bookingUpdateError } = await supabase
+        .from('bookings')
+        .update({
+          files_uploaded: true,
+          document_path: documentPath,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bookingId);
+
+      if (bookingUpdateError) {
+        console.error('Error updating booking after upload:', bookingUpdateError);
+        // Consider compensating action: delete the uploaded file if DB update fails?
+        // await supabase.storage.from(bucketName).remove([filePath]);
+        throw new Error(`Failed to update booking record after upload: ${bookingUpdateError.message}`);
+      }
+
+      // 4. Success: Update local state
+      setBookings(prevBookings => prevBookings.map(b =>
+        b.id === bookingId ? { ...b, filesUploaded: true, documentPath: documentPath } : b
+      ));
+
+      closeUploadModal(); // Close modal on success
+      // Optionally show success message
+
+    } catch (error: any) {
+      console.error('Document upload process failed:', error);
+      setUploadError(error.message || 'An unexpected error occurred during upload. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -232,32 +407,32 @@ const Dashboard: React.FC = () => {
                   <div className="space-y-4">
                     {bookings.map(booking => {
                       const course = getCourseById(booking.courseId);
-                      if (!course) return null;
-                      const depositAmount = 1000; // Define deposit amount
+                      if (!course) {
+                         console.warn(`Course with ID ${booking.courseId} not found in static data for booking ${booking.id}`);
+                         return null; // Skip rendering if course data isn't available
+                      }
+                      const depositAmount = 1000;
 
-                      // Mock completion status for UI demo - replace with actual booking data later
-                      // For this mock, we assume actions are needed unless paymentStatus is 'paid'.
-                      // A real implementation would likely involve more detailed status fields.
-                      const isDocsUploaded = false; // Assume false for demo
-                      const isFormFilled = false;   // Assume false for demo
-                      const isMeetingScheduled = false; // Add mock state for meeting
-                      // Simplify mock: Consider paid if booking.paymentStatus is 'paid'
+                      // --- Use actual data from booking state ---
+                      const isFormFilled = !!booking.formsFilled; // Use actual status
+                      const isDocsUploaded = !!booking.filesUploaded; // Use actual status
+                      const isMeetingScheduled = false; // Keep mock or implement logic if needed
+
+                      // Payment status logic (keep as is for now, can be refined)
+                      // Consider specific payment statuses like 'pending_deposit', 'pending_full', 'paid'
                       const isPaid = booking.paymentStatus === 'paid';
-                      const isDepositPaid = isPaid; // Treat 'paid' as having met deposit requirement for demo
-                      const isPaidInFull = isPaid;  // Treat 'paid' as full payment for demo
+                      const isDepositPaid = booking.paymentStatus === 'paid'; // Using only 'paid' as valid status since 'pending_full' isn't in the type definition
+                      const isPaidInFull = isPaid;
 
-                      // Update showActionRequired to ONLY include mandatory steps
-                      const isActionRequired = !(isDocsUploaded && isFormFilled && isDepositPaid);
-                      // Determine overall confirmed status (all mandatory steps done)
-                      const isConfirmed = !isActionRequired;
+                      // Determine if action is required based on actual statuses
+                      const isActionRequired = !(isFormFilled && isDocsUploaded && isDepositPaid);
+                      const isConfirmed = !isActionRequired; // Basic confirmation logic
 
-                      // --- Function to open Calendly --- 
                       const openCalendly = () => {
                         if ((window as any).Calendly) {
                           (window as any).Calendly.initPopupWidget({url: 'https://calendly.com/rosh-en-ab-d-ulla-h27'});
                         } else {
                           console.error('Calendly script not loaded yet');
-                          // Optionally, show an error message to the user
                         }
                       };
 
@@ -267,7 +442,7 @@ const Dashboard: React.FC = () => {
                           className="border border-gray-200 rounded-lg p-4 hover:border-tactical-300 transition-colors duration-200 ease-in-out"
                         >
                           <div className="flex flex-col md:flex-row justify-between">
-                            {/* Left Side - Course Details */}
+                            {/* Left Side - Course Details (mostly unchanged) */}
                             <div className="mb-4 md:mb-0 md:pr-4 flex-grow">
                               <h3 className="font-heading font-semibold text-lg text-tactical-900">
                                 {course.title}
@@ -275,31 +450,28 @@ const Dashboard: React.FC = () => {
                               <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Calendar className="w-4 h-4 mr-1.5 text-tactical-500 flex-shrink-0" />
-                                  {/* TODO: Replace booking.createdAt with actual scheduled date if available */}
+                                  {/* TODO: Fetch and display actual course date from course_dates table */}
                                   {booking.createdAt ? `Booked: ${formatDate(booking.createdAt)}` : 'Date TBD'}
                                 </div>
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Clock className="w-4 h-4 mr-1.5 text-tactical-500 flex-shrink-0" />
-                                  {course?.duration || 0} days
+                                   {/* Ensure course object has duration, provide fallback */}
+                                  {course?.duration ? `${course.duration} days` : 'Duration N/A'}
                                 </div>
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <MapPin className="w-4 h-4 mr-1.5 text-tactical-500 flex-shrink-0" />
-                                  {/* TODO: Make location dynamic */}
+                                  {/* TODO: Make location dynamic if it varies per course/date */}
                                   S-Arms Shooting Range, Tallinn
                                 </div>
                               </div>
 
+                                {/* Add-ons display (unchanged, assumes extras are handled elsewhere) */}
                               {booking.extras && booking.extras.length > 0 && (
                                 <div className="mt-3">
-                                  <p className="text-sm text-tactical-700 font-medium mb-1">
-                                    Add-ons:
-                                  </p>
+                                   <p className="text-sm text-tactical-700 font-medium mb-1">Add-ons:</p>
                                   <div className="flex flex-wrap gap-2">
                                     {booking.extras.map(extra => (
-                                      <span
-                                        key={extra.id}
-                                        className="bg-tactical-100 text-tactical-800 text-xs px-2 py-1 rounded-full"
-                                      >
+                                       <span key={extra.id} className="bg-tactical-100 text-tactical-800 text-xs px-2 py-1 rounded-full">
                                         {extra.name}
                                       </span>
                                     ))}
@@ -308,18 +480,20 @@ const Dashboard: React.FC = () => {
                               )}
                             </div>
 
+
                             {/* Right Side - Status, Actions, Payment */}
                             <div className="flex flex-col items-start md:items-end md:min-w-[260px] md:max-w-[300px] flex-shrink-0">
                               {/* Status Badge */}
                               {isActionRequired ? (
                                 <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
-                                   <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
+                                   <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
                                    Action Required
                                 </div>
                               ) : (
                                 <div className="bg-green-100 text-green-800 border border-green-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
                                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                                   {isPaidInFull ? 'Confirmed & Paid' : 'Confirmed'}
+                                   {/* Refine confirmation text based on payment status */}
+                                   {isPaidInFull ? 'Confirmed & Paid' : (isDepositPaid ? 'Confirmed (Deposit Paid)' : 'Confirmed')}
                                 </div>
                               )}
 
@@ -328,48 +502,53 @@ const Dashboard: React.FC = () => {
                                 Total: {formatCurrency(booking.totalAmount)}
                               </div>
 
-                              {/* === Redesigned Action Section === */}
+                              {/* === Actions Section (Using actual data) === */}
                               <div className="w-full space-y-4 border-t border-gray-200 pt-4 mt-2">
 
                                 {/* --- Mandatory Steps --- */}
                                 {isActionRequired && (
                                   <div className="mb-4">
-                                    <p className="text-sm font-medium text-tactical-800 mb-2 text-left md:text-right">Complete these steps to reserve your spot:</p>
+                                    <p className="text-sm font-medium text-tactical-800 mb-2 text-left md:text-right">Complete these steps:</p>
                                     <ul className="space-y-2">
-                                      {/* Fill Form Step - Moved to be first */}
-                                      <li className="flex items-center justify-between">
+                                      {/* Fill Form Step - Uses booking.formsFilled */}
+                                      <li className="flex items-center justify-between min-h-[30px]">
                                         <div className={`flex items-center ${isFormFilled ? 'text-gray-400' : 'text-tactical-700'}`}>
                                           {isFormFilled ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <FileText className="w-4 h-4 mr-2 text-tactical-500" />}
                                           <span className={`text-sm ${isFormFilled ? 'line-through' : ''}`}>Fill Information Form</span>
                                         </div>
                                         {!isFormFilled && (
-                                          <Button variant="outline" size="sm" onClick={() => openInfoFormModal(booking.id)} className="ml-2 whitespace-nowrap">
-                                            Fill Form
+                                          <Button variant="outline" size="sm" onClick={() => openInfoFormModal(booking.id)} className="ml-2 whitespace-nowrap" disabled={isSubmitting}>
+                                            {isSubmitting && selectedBookingIdForForm === booking.id ? 'Saving...' : 'Fill Form'}
                                           </Button>
                                         )}
                                       </li>
 
-                                      {/* Upload Documents Step - Moved to be second */}
-                                      <li className="flex items-center justify-between">
+                                      {/* Upload Documents Step - Uses booking.filesUploaded */}
+                                      <li className="flex items-center justify-between min-h-[30px]">
                                         <div className={`flex items-center ${isDocsUploaded ? 'text-gray-400' : 'text-tactical-700'}`}>
                                           {isDocsUploaded ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <Upload className="w-4 h-4 mr-2 text-tactical-500" />}
-                                          <span className={`text-sm ${isDocsUploaded ? 'line-through' : ''}`}>Upload Documents</span>
+                                          <span className={`text-sm ${isDocsUploaded ? 'line-through' : ''}`}>Upload Background Check</span>
+                                          {/* Optional: Link to view uploaded doc */}
+                                          {/* {isDocsUploaded && booking.documentPath && (
+                                              <a href={supabase.storage.from('booking-documents').getPublicUrl(booking.documentPath).data.publicUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline ml-2">(View)</a>
+                                          )} */}
                                         </div>
                                         {!isDocsUploaded && (
-                                          <Button variant="outline" size="sm" onClick={() => openUploadModal(booking.id)} className="ml-2 whitespace-nowrap">
-                                            Upload Docs
+                                          <Button variant="outline" size="sm" onClick={() => openUploadModal(booking.id)} className="ml-2 whitespace-nowrap" disabled={isSubmitting}>
+                                             {isSubmitting && selectedBookingIdForUpload === booking.id ? 'Uploading...' : 'Upload Doc'}
                                           </Button>
                                         )}
                                       </li>
 
-                                      {/* Pay Deposit Step - Remains third */}
-                                      <li className="flex items-center justify-between">
+                                      {/* Pay Deposit Step - Uses isDepositPaid */}
+                                      <li className="flex items-center justify-between min-h-[30px]">
                                         <div className={`flex items-center ${isDepositPaid ? 'text-gray-400' : 'text-tactical-700'}`}>
                                           {isDepositPaid ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <CreditCard className="w-4 h-4 mr-2 text-tactical-500" />}
                                           <span className={`text-sm ${isDepositPaid ? 'line-through' : ''}`}>Pay Deposit ({formatCurrency(depositAmount)})</span>
                                         </div>
                                         {!isDepositPaid && (
-                                          <Button variant="accent" size="sm" onClick={() => alert(`Mock: Pay Deposit for ${booking.id}`)} className="ml-2 whitespace-nowrap">
+                                          // TODO: Implement actual payment logic/link
+                                          <Button variant="accent" size="sm" onClick={() => alert(`Redirect to payment for ${booking.id}`)} className="ml-2 whitespace-nowrap">
                                             Pay Deposit
                                           </Button>
                                         )}
@@ -381,17 +560,19 @@ const Dashboard: React.FC = () => {
                                 {/* --- Pay Remaining (Conditional) --- */}
                                 {isDepositPaid && !isPaidInFull && booking.totalAmount > depositAmount && (
                                   <div className="text-left md:text-right">
-                                    <Button variant="primary" size="sm" onClick={() => alert(`Mock: Pay Remaining for ${booking.id}`)} className="w-full md:w-auto justify-center">
+                                     {/* TODO: Implement actual payment logic/link */}
+                                    <Button variant="primary" size="sm" onClick={() => alert(`Redirect to pay remaining for ${booking.id}`)} className="w-full md:w-auto justify-center">
                                       Pay Remaining ({formatCurrency(booking.totalAmount - depositAmount)})
                                     </Button>
                                   </div>
                                 )}
 
                                 {/* --- Next Steps / Optional --- */}
-                                <div className="mt-4 border-t border-gray-200 pt-4"> {/* Always add separator */} 
+                                 {/* Show meeting only if booking is confirmed (all mandatory done) */}
+                                {isConfirmed && (
+                                    <div className="mt-4 border-t border-gray-200 pt-4">
                                     <ul className="space-y-2">
-                                      {/* Schedule Meeting Step */}
-                                      <li className="flex items-center justify-between">
+                                        <li className="flex items-center justify-between min-h-[30px]">
                                         <div className={`flex items-center ${isMeetingScheduled ? 'text-gray-400' : 'text-tactical-700'}`}>
                                           {isMeetingScheduled ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <Calendar className="w-4 h-4 mr-2 text-tactical-500" />}
                                           <span className={`text-sm ${isMeetingScheduled ? 'line-through' : ''}`}>Schedule Instructor Meeting</span>
@@ -402,11 +583,9 @@ const Dashboard: React.FC = () => {
                                            </Button>
                                         )}
                                       </li>
-                                      {/* Add other optional steps here if needed */}
                                     </ul>
                                   </div>
-                                {/* Removed closing parenthesis and curly brace from the isConfirmed condition */}
-                                {/* --- End Redesigned Action Section --- */}
+                                )}
 
                               </div>
                             </div>
@@ -419,6 +598,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
+             {/* Profile & Help Sections (unchanged) */}
             <div className="space-y-6">
               {!isAuthLoading && user ? (
                 <div className="bg-white rounded-xl shadow-md p-6">
@@ -431,25 +611,25 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-tactical-900">
-                        {user?.firstName} {user?.lastName}
+                        {/* Display user's first and last name if available */}
+                        {user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Trainee'}
                       </h3>
-                      <p className="text-sm text-tactical-600 break-all">{user?.email}</p>
+                       {/* Display user's email */}
+                      <p className="text-sm text-tactical-600 break-all">{user.email || 'No email found'}</p>
                     </div>
                   </div>
+                   {/* Profile action buttons */}
                   <div className="space-y-3">
                     <Link to="/profile">
-                      <Button variant="outline" fullWidth>
-                        Edit Profile
-                      </Button>
+                      <Button variant="outline" fullWidth>Edit Profile</Button>
                     </Link>
                     <Link to="/change-password">
-                      <Button variant="ghost" fullWidth>
-                        Change Password
-                      </Button>
+                      <Button variant="ghost" fullWidth>Change Password</Button>
                     </Link>
                   </div>
                 </div>
               ) : (
+                /* Profile loading skeleton */
                 <div className="bg-white rounded-xl shadow-md p-6 animate-pulse">
                   <div className="h-6 bg-gray-300 rounded w-1/2 mb-6"></div>
                   <div className="flex items-center mb-6">
@@ -466,6 +646,7 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
 
+              {/* Need Help? section */}
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4">
                   Need Help?
@@ -475,9 +656,7 @@ const Dashboard: React.FC = () => {
                 </p>
                 <div className="space-y-3">
                   <Link to="/contact">
-                    <Button variant="primary" fullWidth>
-                      Contact Support
-                    </Button>
+                    <Button variant="primary" fullWidth>Contact Support</Button>
                   </Link>
                 </div>
               </div>
@@ -487,12 +666,13 @@ const Dashboard: React.FC = () => {
       </main>
       <Footer />
 
+      {/* Book New Training Modal */}
       <Modal 
         isOpen={isBookingModalOpen} 
         onClose={() => setIsBookingModalOpen(false)}
         title="Select Training Package"
       >
-        <Courses showLayout={false} />
+        <Courses showLayout={false} /> {/* Assumes Courses component handles its own logic */}
       </Modal>
 
       {/* Information Form Modal */}
@@ -500,12 +680,22 @@ const Dashboard: React.FC = () => {
         isOpen={isInfoFormModalOpen}
         onClose={closeInfoFormModal}
         title="Provide Booking Information"
+        // Optional: Add footer for error display or use inline error display
       >
+         {/* Display Form Error Message */}
+        {formError && (
+          <div className="mb-4 p-3 rounded-md bg-red-100 border border-red-400 text-red-700 flex items-center">
+            <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0" />
+            <span className="text-sm">{formError}</span>
+          </div>
+        )}
         {selectedBookingIdForForm && (
           <BookingInformationForm
             bookingId={selectedBookingIdForForm}
             onClose={closeInfoFormModal}
             onSubmit={handleInformationFormSubmit}
+            // Pass loading state if the form component needs it
+            isSubmitting={isSubmitting} // Pass submitting state
           />
         )}
       </Modal>
@@ -515,12 +705,22 @@ const Dashboard: React.FC = () => {
         isOpen={isUploadModalOpen}
         onClose={closeUploadModal}
         title="Upload Criminal Background Check"
+         // Optional: Add footer for error display or use inline error display
       >
+         {/* Display Upload Error Message */}
+        {uploadError && (
+           <div className="mb-4 p-3 rounded-md bg-red-100 border border-red-400 text-red-700 flex items-center">
+             <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0" />
+             <span className="text-sm">{uploadError}</span>
+           </div>
+        )}
         {selectedBookingIdForUpload && (
           <UploadDocumentForm
             bookingId={selectedBookingIdForUpload}
             onClose={closeUploadModal}
-            onSubmit={handleDocumentUploadSubmit}
+            uploadFile={handleDocumentUploadSubmit}
+            // Pass loading state if the form component needs it
+            isSubmitting={isSubmitting} // Pass submitting state
           />
         )}
       </Modal>
