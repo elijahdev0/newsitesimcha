@@ -308,8 +308,15 @@ const Dashboard: React.FC = () => {
             ? 'Deposit payment successful! Your booking is updated.' 
             : 'Payment successful! Your booking is fully paid.';
           setPaymentStatusMessage({ type: 'success', message: successMessage });
+          
           // Refresh bookings to show updated status
-          fetchUserBookings();
+          await fetchUserBookings(); // Add await to ensure data is fetched before continuing
+          
+          // Force re-render by setting a state value if needed
+          setIsCreatingCheckoutSession(null); // Ensure button state is reset
+          
+          // Force re-render of all booking components by creating a new array
+          setBookings(bookings => [...bookings]); 
         } else {
           // Handle cases where verification succeeded but payment wasn't successful
           console.warn('Payment verification complete, but status was not successful:', verificationData.status);
@@ -342,9 +349,8 @@ const Dashboard: React.FC = () => {
       }
     };
 
-  // Add fetchUserBookings to dependencies if needed, but be cautious of infinite loops
-  // Run only once on mount or when location might change if using router state
-  }, [fetchUserBookings]); // Only re-run if fetchUserBookings changes (due to useCallback dependencies)
+  // Add window.location.search to dependencies to ensure the effect runs when URL params change
+  }, [fetchUserBookings, window.location.search]); // Re-run if URL search params change
 
   // --- Actual implementation for handleInformationFormSubmit ---
   const handleInformationFormSubmit = async (formData: BookingFormData) => {
