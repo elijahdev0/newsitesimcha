@@ -315,8 +315,6 @@ const Dashboard: React.FC = () => {
           // Force re-render by setting a state value if needed
           setIsCreatingCheckoutSession(null); // Ensure button state is reset
           
-          // Force re-render of all booking components by creating a new array
-          setBookings(bookings => [...bookings]); 
         } else {
           // Handle cases where verification succeeded but payment wasn't successful
           console.warn('Payment verification complete, but status was not successful:', verificationData.status);
