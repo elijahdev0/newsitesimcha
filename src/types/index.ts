@@ -36,7 +36,7 @@ export type Booking = {
   courseId: string;
   courseDateId: string;
   status: 'pending' | 'confirmed' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'refunded';
+  paymentStatus: 'pending' | 'paid' | 'refunded' | 'deposit_paid';
   totalAmount: number;
   createdAt: string;
   extras: BookingExtra[];

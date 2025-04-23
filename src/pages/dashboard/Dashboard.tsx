@@ -84,6 +84,10 @@ const Dashboard: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- New state for Stripe flow ---
+  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState<string | null>(null); // Store bookingId being processed
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [paymentStatusMessage, setPaymentStatusMessage] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   // Load Calendly script
   useEffect(() => {
@@ -175,6 +179,123 @@ const Dashboard: React.FC = () => {
     setSelectedBookingIdForForm(null);
     setFormError(null); // Clear errors on close
   };
+
+  // --- Stripe Payment Handling ---
+
+  const handlePayDepositClick = async (bookingId: string) => {
+    setIsCreatingCheckoutSession(bookingId);
+    setPaymentStatusMessage(null); // Clear previous messages
+    setFormError(null); // Clear other errors
+    setUploadError(null);
+
+    try {
+      // No need to manually get the token here, supabase.functions.invoke handles it
+
+      // Call the Edge Function using supabase.functions.invoke
+      // The function name is the directory name of the function
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        method: 'POST', // Method is often optional here but good practice
+        body: { bookingId },
+      });
+
+      if (error) {
+        console.error('Error invoking create-stripe-checkout function:', error);
+        // Handle different error types if needed (e.g., function error vs network error)
+        throw new Error(error.message || 'Failed to initiate payment. Please try again.');
+      }
+
+      // Assuming the function returns { url: '...' } on success
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        // Handle cases where the function succeeded but didn't return a URL
+        console.error('Function executed but did not return a redirect URL:', data);
+        throw new Error('Missing redirect URL from payment initiation.');
+      }
+      // Note: No need to reset isCreatingCheckoutSession here, as the page redirects
+
+    } catch (error: any) {
+      console.error('Payment initiation failed:', error);
+      setPaymentStatusMessage({ type: 'error', message: error.message || 'An unexpected error occurred.' });
+      setIsCreatingCheckoutSession(null); // Reset loading state on error
+    }
+  };
+
+  // --- Effect to handle redirect back from Stripe ---
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const paymentStatus = query.get('payment');
+    const sessionId = query.get('session_id');
+
+    // Clear message after a delay if it exists
+    let messageTimeoutId: any = null; // Use any to bypass potential NodeJS type issue
+    if (paymentStatusMessage) {
+      messageTimeoutId = setTimeout(() => setPaymentStatusMessage(null), 7000); // Clear message after 7 seconds
+    }
+
+    if (isVerifyingPayment) {
+      return; // Don't run verification multiple times if already running
+    }
+
+    const verifyPayment = async (stripeSessionId: string) => {
+      setIsVerifyingPayment(true);
+      setPaymentStatusMessage({ type: 'info', message: 'Verifying payment, please wait...' });
+
+      try {
+        // No need to manually get token here
+
+        // Call the Edge Function using supabase.functions.invoke
+        const { data: verificationData, error } = await supabase.functions.invoke('verify-stripe-payment', {
+           method: 'POST',
+           body: { session_id: stripeSessionId },
+        });
+
+
+        if (error) {
+           console.error('Error invoking verify-stripe-payment function:', error);
+           throw new Error(error.message || 'Payment verification failed.');
+        }
+
+        // Process verificationData as before
+        if (verificationData.success && verificationData.status === 'paid') {
+          setPaymentStatusMessage({ type: 'success', message: 'Deposit payment successful! Your booking is updated.' });
+          // Refresh bookings to show updated status
+          fetchUserBookings();
+        } else {
+           // Handle cases where verification succeeded but payment wasn't 'paid' (e.g., session expired)
+           console.warn('Payment verification complete, but status was not paid:', verificationData.status);
+           setPaymentStatusMessage({ type: 'info', message: `Payment status: ${verificationData.status || 'pending'}. Please check again later or contact support.` });
+        }
+
+      } catch (error: any) {
+        console.error('Payment verification error:', error);
+        setPaymentStatusMessage({ type: 'error', message: error.message || 'Failed to verify payment.' });
+      } finally {
+        setIsVerifyingPayment(false);
+         // Clean up URL regardless of outcome
+         window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+
+    if (paymentStatus === 'success' && sessionId) {
+      verifyPayment(sessionId);
+    } else if (paymentStatus === 'cancel') {
+       setPaymentStatusMessage({ type: 'info', message: 'Payment process cancelled.' });
+       // Clean up URL
+       window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    // Cleanup function for the timeout
+    return () => {
+      if (messageTimeoutId) {
+        clearTimeout(messageTimeoutId);
+      }
+    };
+
+  // Add fetchUserBookings to dependencies if needed, but be cautious of infinite loops
+  // Run only once on mount or when location might change if using router state
+  }, [fetchUserBookings]); // Only re-run if fetchUserBookings changes (due to useCallback dependencies)
 
   // --- Actual implementation for handleInformationFormSubmit ---
   const handleInformationFormSubmit = async (formData: BookingFormData) => {
@@ -354,6 +475,22 @@ const Dashboard: React.FC = () => {
       <Header variant="dark-text" />
       <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
         <div className="container mx-auto px-4">
+          {/* --- Display Payment Status Message --- */}
+          {paymentStatusMessage && (
+             <div className={`p-4 mb-6 rounded-md border ${
+               paymentStatusMessage.type === 'success' ? 'bg-green-100 border-green-400 text-green-800' :
+               paymentStatusMessage.type === 'error' ? 'bg-red-100 border-red-400 text-red-700' :
+               'bg-blue-100 border-blue-400 text-blue-700' // Info
+             }`}>
+               <div className="flex items-center">
+                 {paymentStatusMessage.type === 'success' && <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />}
+                 {paymentStatusMessage.type === 'error' && <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0" />}
+                 {paymentStatusMessage.type === 'info' && <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0" />} {/* Or a different icon */}
+                 <span className="text-sm">{paymentStatusMessage.message}</span>
+               </div>
+             </div>
+          )}
+
           {!isAuthLoading && user && (
             <div className="bg-tactical-900 text-white rounded-xl p-8 mb-8 shadow-lg">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -421,7 +558,7 @@ const Dashboard: React.FC = () => {
                       // Payment status logic (keep as is for now, can be refined)
                       // Consider specific payment statuses like 'pending_deposit', 'pending_full', 'paid'
                       const isPaid = booking.paymentStatus === 'paid';
-                      const isDepositPaid = booking.paymentStatus === 'paid'; // Using only 'paid' as valid status since 'pending_full' isn't in the type definition
+                      const isDepositPaid = booking.paymentStatus === 'paid' || booking.paymentStatus === 'deposit_paid';
                       const isPaidInFull = isPaid;
 
                       // Determine if action is required based on actual statuses
@@ -547,9 +684,14 @@ const Dashboard: React.FC = () => {
                                           <span className={`text-sm ${isDepositPaid ? 'line-through' : ''}`}>Pay Deposit ({formatCurrency(depositAmount)})</span>
                                         </div>
                                         {!isDepositPaid && (
-                                          // TODO: Implement actual payment logic/link
-                                          <Button variant="accent" size="sm" onClick={() => alert(`Redirect to payment for ${booking.id}`)} className="ml-2 whitespace-nowrap">
-                                            Pay Deposit
+                                          <Button
+                                             variant="accent"
+                                             size="sm"
+                                             onClick={() => handlePayDepositClick(booking.id)}
+                                             className="ml-2 whitespace-nowrap"
+                                             disabled={isCreatingCheckoutSession === booking.id || isVerifyingPayment} // Disable while processing this or any payment
+                                          >
+                                            {isCreatingCheckoutSession === booking.id ? 'Processing...' : 'Pay Deposit'}
                                           </Button>
                                         )}
                                       </li>
