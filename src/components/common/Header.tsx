@@ -126,7 +126,11 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className={cn(buttonTextColor)}> {/* Apply conditional button text color */}
+                  <Button variant="ghost" size="sm" className={cn(
+                    buttonTextColor,
+                    // Custom hover for Log In button
+                    "hover:text-accent-600 hover:bg-accent-100"
+                  )}>
                     <LogIn className="w-4 h-4 mr-2" />
                     Log In
                   </Button>

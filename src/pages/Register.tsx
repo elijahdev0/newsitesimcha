@@ -35,7 +35,7 @@ const Register: React.FC = () => {
 
   return (
     <>
-      <Header />
+      <Header variant="dark-text" />
       <main className="min-h-screen bg-tactical-100 pt-32 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
