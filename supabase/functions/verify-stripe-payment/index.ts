@@ -49,7 +49,7 @@ serve(async (req) => {
       const { error: updateError } = await supabase
         .from('bookings')
         .update({
-          payment_status: 'paid', // Or 'deposit_paid'
+          payment_status: 'deposit_paid', // Changed from 'paid' to 'deposit_paid'
           // stripe_checkout_session_id: session.id, // Optional: Add this column to your table
           updated_at: new Date().toISOString()
         })
@@ -62,8 +62,8 @@ serve(async (req) => {
         throw new Error('Failed to update booking status after payment confirmation.');
       }
 
-      console.log(`Booking ${bookingId} marked as paid (deposit) successfully.`);
-      return new Response(JSON.stringify({ success: true, bookingId: bookingId, status: 'paid' }), {
+      console.log(`Booking ${bookingId} marked as deposit paid successfully.`);
+      return new Response(JSON.stringify({ success: true, bookingId: bookingId, status: 'deposit_paid' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
