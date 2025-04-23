@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/authStore';
 import { useBookingStore } from '../../store/bookingStore';
 import { formatCurrency } from '../../utils/formatters';
-import { extras } from '../../data/extras';
+import { extras } from '../../data/courses';
 import { Course, CourseDate, Extra, BookingExtra } from '../../types';
 
 // Interface for Course data fetched from Supabase (removed slug)
@@ -44,7 +44,7 @@ const BookingFlow: React.FC = () => {
   const navigate = useNavigate();
   // Use courseId directly from URL params, assuming it's the UUID
   const { courseId } = useParams<{ courseId: string }>();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { selectCourse, selectedCourse, selectDate, selectedDate, addExtra, removeExtra, selectedExtras, calculateTotal, createBooking, resetSelection } = useBookingStore();
   
   const [step, setStep] = useState(1);
@@ -95,7 +95,11 @@ const BookingFlow: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await createBooking();
+      if (!user?.id) {
+        throw new Error("User not found. Cannot create booking.");
+      }
+      const bookingId = await createBooking(user.id); // Pass user.id
+      console.log("Booking successfully created with ID:", bookingId); // Optional log
       setIsBookingComplete(true);
       setStep(3); // Set step to 3 (Confirmation) after booking
     } catch (error: any) {

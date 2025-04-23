@@ -97,35 +97,35 @@ export const courses: Course[] = [
 export const extras: Extra[] = [
   // Experiences
   {
-    id: 'helicopter-ride',
+    id: '71501e82-9b2b-4e09-af4a-1d270343df96',
     name: 'Helicopter Ride',
     price: 2000,
     category: 'experience',
     description: 'Experience an adrenaline-filled helicopter flight over the Estonian landscape.'
   },
   {
-    id: 'yacht-cruise',
+    id: '53624a6e-2e9c-44ea-9c69-9c638479e573',
     name: 'Yacht Cruise',
     price: 2000,
     category: 'experience',
     description: 'Relax on a luxury yacht cruise along the picturesque Baltic coast.'
   },
   {
-    id: 'horseback-riding',
+    id: '64196261-3aa6-486d-99d9-8d560dabf260',
     name: 'Horseback Riding',
     price: 300,
     category: 'experience',
     description: 'Explore the Estonian countryside on horseback with a guided tour.'
   },
   {
-    id: 'spa-massage',
+    id: 'f6ea5afb-4a6a-4b7f-96d6-a92c6e4f53ed',
     name: 'Spa & Massage',
     price: 300,
     category: 'experience',
     description: 'Unwind with a professional spa treatment and massage session.'
   },
   {
-    id: 'cigar-lounge',
+    id: 'fc7ce555-7815-4a81-891f-dc076894c424',
     name: 'Cigar Lounge',
     price: 400,
     category: 'experience',
@@ -134,28 +134,28 @@ export const extras: Extra[] = [
   
   // Tactical Add-ons
   {
-    id: 'night-shooting',
+    id: 'e5e85d41-faab-4b2c-b326-c61365c605c4',
     name: 'Night Shooting',
     price: 250,
     category: 'tactical',
     description: 'Master the art of shooting in low-light and nighttime conditions.'
   },
   {
-    id: 'rifle-handling',
+    id: '55ff54f5-d3b8-4fc7-a120-3785682a99ae',
     name: 'Rifle Handling & Reloads',
     price: 250,
     category: 'tactical',
     description: 'Advance your rifle skills with specialized handling and reload techniques.'
   },
   {
-    id: 'pistol-handling',
+    id: '3fcc4ba7-624d-4a40-b6a9-24a28f98c4c1',
     name: 'Pistol Handling & Malfunctions',
     price: 250,
     category: 'tactical',
     description: 'Learn professional pistol handling and how to clear various malfunctions quickly.'
   },
   {
-    id: 'krav-maga',
+    id: '91297a3f-1aeb-4917-8f08-e807725f85b3',
     name: 'Krav Maga (Disarms & Weapon Retention)',
     price: 300,
     category: 'tactical',
@@ -164,14 +164,14 @@ export const extras: Extra[] = [
   
   // Media & Merch
   {
-    id: 'media-package',
+    id: 'fd31c89e-c1db-4b8c-b057-e147331c92d2',
     name: 'Media Package (Photo/Video)',
     price: 500,
     category: 'media',
     description: 'Professional photo and video documentation of your training experience.'
   },
   {
-    id: 'tactical-merch',
+    id: '9593a7bf-b5d9-48f6-a247-758da406f7a4',
     name: 'Tactical Merch Kit',
     price: 300,
     category: 'media',
@@ -180,7 +180,7 @@ export const extras: Extra[] = [
   
   // Accommodation
   {
-    id: 'hotel-upgrade',
+    id: '0c5222c5-ffeb-4b2b-af5c-a4031fb70ec0',
     name: 'Hotel Upgrade: Telegraaf (per night)',
     price: 500,
     category: 'accommodation',
@@ -189,14 +189,14 @@ export const extras: Extra[] = [
   
   // Ammo
   {
-    id: 'ammo-9mm',
+    id: '9e4a6821-bf4a-492d-b5ca-e6bf86822f0c',
     name: 'Extra 9mm Ammo (per 100 rounds)',
     price: 60,
     category: 'ammo',
     description: 'Additional 9mm ammunition for extended practice sessions.'
   },
   {
-    id: 'ammo-762',
+    id: 'e45abc7c-c567-48de-b02e-f786246455ef',
     name: 'Extra 7.62mm Ammo (per 100 rounds)',
     price: 90,
     category: 'ammo',

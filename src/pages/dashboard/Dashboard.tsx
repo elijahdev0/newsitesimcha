@@ -24,6 +24,12 @@ import { Modal } from '../../components/common/Modal';
 import Courses from '../Courses';
 import { BookingInformationForm } from '../../components/dashboard/BookingInformationForm';
 import { UploadDocumentForm } from '../../components/dashboard/UploadDocumentForm';
+import { supabase } from '../../lib/supabase'; // Import Supabase client
+
+// Use generated types for Supabase data
+// import { Tables } from '../../supabase/schema_types'; // Remove this incorrect path
+import { Tables } from '../../../supabase/schema_types'; // Correct path from src/pages/dashboard to root/supabase
+type SupabaseBooking = Tables<'bookings'>;
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -56,22 +62,59 @@ const Dashboard: React.FC = () => {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
         navigate('/login');
-      } else {
-        const fetchBookings = async () => {
+      } else if (user?.id) { // Check for user.id here
+        const fetchUserBookings = async () => {
           setIsLoadingBookings(true);
           try {
-            const userBookings = await getBookings();
-            setBookings(userBookings);
+            // Fetch directly from Supabase, filtering by user ID
+            const { data, error } = await supabase
+              .from('bookings')
+              .select('*') // Select all columns for now
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false }); // Show newest first
+
+            if (error) {
+              console.error('Supabase fetch bookings error:', error);
+              throw error;
+            }
+
+            // Map Supabase data (snake_case) to component state type (camelCase)
+            const formattedBookings: Booking[] = (data || []).map((dbBooking: SupabaseBooking) => ({
+              id: dbBooking.id,
+              userId: dbBooking.user_id,
+              courseId: dbBooking.course_id,
+              courseDateId: dbBooking.course_date_id,
+              status: dbBooking.status as Booking['status'], // Assert type for status
+              paymentStatus: dbBooking.payment_status as Booking['paymentStatus'], // Assert type for paymentStatus
+              totalAmount: dbBooking.total_amount,
+              createdAt: dbBooking.created_at,
+              // extras are not directly fetched here, initialize as empty
+              extras: [],
+              // Add mapping for other fields if they exist in your Booking type
+              // formsFilled: dbBooking.forms_filled, // Uncomment if Booking type has formsFilled
+              // filesUploaded: dbBooking.files_uploaded, // Uncomment if Booking type has filesUploaded
+            }));
+
+            setBookings(formattedBookings);
+
           } catch (error) {
+            // Error handling already present
             console.error('Error fetching bookings:', error);
+            setBookings([]); // Clear bookings on error
           } finally {
             setIsLoadingBookings(false);
           }
         };
-        fetchBookings();
+        fetchUserBookings();
+      } else {
+         // Handle case where user exists but ID is missing (shouldn't happen often)
+         setIsLoadingBookings(false);
+         console.warn('User authenticated but ID missing, cannot fetch bookings.');
+         setBookings([]);
       }
     }
-  }, [isAuthLoading, isAuthenticated, navigate, getBookings]);
+  // Update dependency array: remove getBookings, add user
+  }, [isAuthLoading, isAuthenticated, user, navigate]);
 
   const getCourseById = (courseId: string): Course | undefined => {
     return courses.find(course => course.id === courseId);
@@ -130,28 +173,6 @@ const Dashboard: React.FC = () => {
     closeUploadModal();
     alert(`Document '${file.name}' upload initiated! (Mock update)`);
   };
-
-  // --- Data Fetching ---
-  useEffect(() => {
-    if (!isAuthLoading) {
-      if (!isAuthenticated) {
-        navigate('/login');
-      } else {
-        const fetchBookings = async () => {
-          setIsLoadingBookings(true);
-          try {
-            const userBookings = await getBookings();
-            setBookings(userBookings);
-          } catch (error) {
-            console.error('Error fetching bookings:', error);
-          } finally {
-            setIsLoadingBookings(false);
-          }
-        };
-        fetchBookings();
-      }
-    }
-  }, [isAuthLoading, isAuthenticated, navigate, getBookings]);
 
   return (
     <>
