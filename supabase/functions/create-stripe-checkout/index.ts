@@ -12,7 +12,7 @@ const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
 
 // Default deposit amount (in cents)
 const DEPOSIT_AMOUNT_CENTS = 100000;
-const CURRENCY = 'usd';
+const CURRENCY = 'eur';
 
 serve(async (req) => {
   // Handle CORS preflight requests

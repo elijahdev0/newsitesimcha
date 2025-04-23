@@ -594,7 +594,7 @@ const Dashboard: React.FC = () => {
                          console.warn(`Course with ID ${booking.courseId} not found in static data for booking ${booking.id}`);
                          return null; // Skip rendering if course data isn't available
                       }
-                      const depositAmount = 1000;
+                      const depositAmount = 1000; // Use 1000 for the logic check
 
                       // --- Use actual data from booking state ---
                       const isFormFilled = !!booking.formsFilled; // Use actual status
