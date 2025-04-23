@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Package, Plus, Users, Upload, FileText, CreditCard } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Package,
+  Plus,
+  Users,
+  Upload,
+  FileText,
+  CreditCard,
+  CheckCircle,
+} from 'lucide-react';
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
@@ -216,8 +227,10 @@ const Dashboard: React.FC = () => {
                       const isDepositPaid = isPaid; // Treat 'paid' as having met deposit requirement for demo
                       const isPaidInFull = isPaid;  // Treat 'paid' as full payment for demo
 
-                      // Update showActionRequired to include meeting
-                      const showActionRequired = !(isDocsUploaded && isFormFilled && isDepositPaid && isMeetingScheduled);
+                      // Update showActionRequired to ONLY include mandatory steps
+                      const isActionRequired = !(isDocsUploaded && isFormFilled && isDepositPaid);
+                      // Determine overall confirmed status (all mandatory steps done)
+                      const isConfirmed = !isActionRequired;
 
                       // --- Function to open Calendly --- 
                       const openCalendly = () => {
@@ -279,15 +292,14 @@ const Dashboard: React.FC = () => {
                             {/* Right Side - Status, Actions, Payment */}
                             <div className="flex flex-col items-start md:items-end md:min-w-[260px] md:max-w-[300px] flex-shrink-0">
                               {/* Status Badge */}
-                              {showActionRequired ? (
+                              {isActionRequired ? (
                                 <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
                                    <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
                                    Action Required
                                 </div>
                               ) : (
                                 <div className="bg-green-100 text-green-800 border border-green-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
-                                   <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                   {/* If action not required, assume confirmed. Check if paid in full for badge text. */}
+                                   <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                                    {isPaidInFull ? 'Confirmed & Paid' : 'Confirmed'}
                                 </div>
                               )}
@@ -297,79 +309,87 @@ const Dashboard: React.FC = () => {
                                 Total: {formatCurrency(booking.totalAmount)}
                               </div>
 
-                              {/* Action Required Section */}
-                              {showActionRequired && (
-                                <div className="w-full border-t border-gray-200 pt-3 mt-1 mb-4">
-                                  <p className="text-sm font-medium text-tactical-800 mb-1 text-left md:text-right">Reserve Your Spot:</p>
-                                  <p className="text-xs text-tactical-600 mb-2 text-left md:text-right">
-                                    Complete these steps to confirm your booking. The €1000 deposit secures your place.
-                                  </p>
-                                  <ul className="space-y-1.5 text-sm text-tactical-700 text-left md:text-right">
-                                    <ActionItem label="Upload Required Documents" isComplete={isDocsUploaded} IconComponent={Upload} />
-                                    <ActionItem label="Fill Out Information Form" isComplete={isFormFilled} IconComponent={FileText} />
-                                    <ActionItem label={`Pay €1000 Deposit (Required)`} isComplete={isDepositPaid} IconComponent={CreditCard} />
-                                    {/* Add ActionItem for meeting */}
-                                    <ActionItem label="Schedule Instructor Meeting" isComplete={isMeetingScheduled} IconComponent={Calendar} />
-                                  </ul>
-                                </div>
-                              )}
+                              {/* === Redesigned Action Section === */}
+                              <div className="w-full space-y-4 border-t border-gray-200 pt-4 mt-2">
 
-                              {/* Action Buttons */}
-                              <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full md:w-auto mt-auto justify-start md:justify-end">
-                                {/* Conditionally show buttons based on mock status */}
-                                {!isDocsUploaded && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openUploadModal(booking.id)}
-                                    className="flex-grow md:flex-grow-0 justify-center"
-                                  >
-                                    <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Docs
-                                  </Button>
+                                {/* --- Mandatory Steps --- */}
+                                {isActionRequired && (
+                                  <div className="mb-4">
+                                    <p className="text-sm font-medium text-tactical-800 mb-2 text-left md:text-right">Complete these steps to reserve your spot:</p>
+                                    <ul className="space-y-2">
+                                      {/* Fill Form Step - Moved to be first */}
+                                      <li className="flex items-center justify-between">
+                                        <div className={`flex items-center ${isFormFilled ? 'text-gray-400' : 'text-tactical-700'}`}>
+                                          {isFormFilled ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <FileText className="w-4 h-4 mr-2 text-tactical-500" />}
+                                          <span className={`text-sm ${isFormFilled ? 'line-through' : ''}`}>Fill Information Form</span>
+                                        </div>
+                                        {!isFormFilled && (
+                                          <Button variant="outline" size="sm" onClick={() => openInfoFormModal(booking.id)} className="ml-2 whitespace-nowrap">
+                                            Fill Form
+                                          </Button>
+                                        )}
+                                      </li>
+
+                                      {/* Upload Documents Step - Moved to be second */}
+                                      <li className="flex items-center justify-between">
+                                        <div className={`flex items-center ${isDocsUploaded ? 'text-gray-400' : 'text-tactical-700'}`}>
+                                          {isDocsUploaded ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <Upload className="w-4 h-4 mr-2 text-tactical-500" />}
+                                          <span className={`text-sm ${isDocsUploaded ? 'line-through' : ''}`}>Upload Documents</span>
+                                        </div>
+                                        {!isDocsUploaded && (
+                                          <Button variant="outline" size="sm" onClick={() => openUploadModal(booking.id)} className="ml-2 whitespace-nowrap">
+                                            Upload Docs
+                                          </Button>
+                                        )}
+                                      </li>
+
+                                      {/* Pay Deposit Step - Remains third */}
+                                      <li className="flex items-center justify-between">
+                                        <div className={`flex items-center ${isDepositPaid ? 'text-gray-400' : 'text-tactical-700'}`}>
+                                          {isDepositPaid ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <CreditCard className="w-4 h-4 mr-2 text-tactical-500" />}
+                                          <span className={`text-sm ${isDepositPaid ? 'line-through' : ''}`}>Pay Deposit ({formatCurrency(depositAmount)})</span>
+                                        </div>
+                                        {!isDepositPaid && (
+                                          <Button variant="accent" size="sm" onClick={() => alert(`Mock: Pay Deposit for ${booking.id}`)} className="ml-2 whitespace-nowrap">
+                                            Pay Deposit
+                                          </Button>
+                                        )}
+                                      </li>
+                                    </ul>
+                                  </div>
                                 )}
-                                {!isFormFilled && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openInfoFormModal(booking.id)}
-                                    className="flex-grow md:flex-grow-0 justify-center"
-                                  >
-                                    <FileText className="w-3.5 h-3.5 mr-1.5" /> Fill Form
-                                  </Button>
-                                )}
-                                {/* Add Schedule Meeting Button */} 
-                                {!isMeetingScheduled && (
-                                   <Button variant="outline" size="sm" onClick={openCalendly} className="flex-grow md:flex-grow-0 justify-center">
-                                     <Calendar className="w-3.5 h-3.5 mr-1.5" /> Schedule Meeting
-                                   </Button>
-                                )}
-                                {!isDepositPaid && (
-                                  <>
-                                    <Button variant="accent" size="sm" onClick={() => alert(`Mock: Pay Deposit for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
-                                      Pay Deposit ({formatCurrency(depositAmount)})
-                                    </Button>
-                                    {/* Show Pay Full button only if deposit is not sufficient for full amount */}
-                                    {booking.totalAmount > depositAmount && (
-                                      <Button variant="primary" size="sm" onClick={() => alert(`Mock: Pay Full for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
-                                        Pay Full ({formatCurrency(booking.totalAmount)}) (Optional)
-                                      </Button>
-                                    )}
-                                  </>
-                                )}
+
+                                {/* --- Pay Remaining (Conditional) --- */}
                                 {isDepositPaid && !isPaidInFull && booking.totalAmount > depositAmount && (
-                                  <Button variant="primary" size="sm" onClick={() => alert(`Mock: Pay Remaining for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
-                                    Pay Remaining ({formatCurrency(booking.totalAmount - depositAmount)})
-                                  </Button>
+                                  <div className="text-left md:text-right">
+                                    <Button variant="primary" size="sm" onClick={() => alert(`Mock: Pay Remaining for ${booking.id}`)} className="w-full md:w-auto justify-center">
+                                      Pay Remaining ({formatCurrency(booking.totalAmount - depositAmount)})
+                                    </Button>
+                                  </div>
                                 )}
+
+                                {/* --- Next Steps / Optional --- */}
+                                <div className="mt-4 border-t border-gray-200 pt-4"> {/* Always add separator */} 
+                                    <ul className="space-y-2">
+                                      {/* Schedule Meeting Step */}
+                                      <li className="flex items-center justify-between">
+                                        <div className={`flex items-center ${isMeetingScheduled ? 'text-gray-400' : 'text-tactical-700'}`}>
+                                          {isMeetingScheduled ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <Calendar className="w-4 h-4 mr-2 text-tactical-500" />}
+                                          <span className={`text-sm ${isMeetingScheduled ? 'line-through' : ''}`}>Schedule Instructor Meeting</span>
+                                        </div>
+                                        {!isMeetingScheduled && (
+                                           <Button variant="outline" size="sm" onClick={openCalendly} className="ml-2 whitespace-nowrap">
+                                             Schedule Meeting
+                                           </Button>
+                                        )}
+                                      </li>
+                                      {/* Add other optional steps here if needed */}
+                                    </ul>
+                                  </div>
+                                {/* Removed closing parenthesis and curly brace from the isConfirmed condition */}
+                                {/* --- End Redesigned Action Section --- */}
+
                               </div>
-
-                              {/* View Details Link - REMOVED */}
-                              {/* 
-                              <Link to={`/bookings/${booking.id}`} className="mt-3 text-sm text-tactical-600 hover:text-tactical-900 hover:underline self-start md:self-end">
-                                View Full Booking Details
-                              </Link>
-                              */}
-
                             </div>
                           </div>
                         </div>
@@ -488,18 +508,5 @@ const Dashboard: React.FC = () => {
     </>
   );
 };
-
-// Helper component for Action Items (can be placed at the bottom of the file or imported)
-const ActionItem: React.FC<{ label: string; isComplete: boolean; IconComponent: React.ElementType }> = ({ label, isComplete, IconComponent }) => (
-  <li className={`flex items-center justify-start md:justify-end ${isComplete ? 'text-gray-400' : ''}`}>
-    <span className={`mr-2 ${isComplete ? 'line-through' : ''}`}>{label}</span>
-    {isComplete ? (
-      // CheckCircle Icon (inline SVG or import from lucide-react if preferred)
-      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-    ) : (
-      <IconComponent className="w-4 h-4 text-tactical-500" />
-    )}
-  </li>
-);
 
 export default Dashboard;
