@@ -121,21 +121,42 @@ const BookingFlow: React.FC = () => {
     setSelectedDateObj(date);
     setError(null); // Clear error when selecting a date
 
-    const selectedCourseDate = availableDates.find(
-      // Compare ISO string date parts for reliable matching
-      d => new Date(d.start_date).toDateString() === date.toDateString()
-    );
+    console.log("Calendar clicked date:", date);
+
+    // Find the corresponding date record more robustly
+    const selectedCourseDate = availableDates.find(d => {
+      const startDate = new Date(d.start_date);
+      // Compare year, month, and day individually
+      return (
+        startDate.getFullYear() === date.getFullYear() &&
+        startDate.getMonth() === date.getMonth() &&
+        startDate.getDate() === date.getDate()
+      );
+    });
 
     if (selectedCourseDate) {
-      // Pass the ID to the store function if it expects only a string
-      selectDate(selectedCourseDate.id);
+      console.log("Found matching available date:", selectedCourseDate);
+
+      // Map the Supabase object (snake_case) to the store's expected type (camelCase)
+      // Ensure the 'CourseDate' type is correctly defined in src/types/index.ts
+      const storeReadyDate: CourseDate = {
+        id: selectedCourseDate.id,
+        courseId: selectedCourseDate.course_id,
+        startDate: selectedCourseDate.start_date,
+        endDate: selectedCourseDate.end_date,
+        maxParticipants: selectedCourseDate.max_participants,
+        currentParticipants: selectedCourseDate.current_participants,
+        // Add/map other fields if your CourseDate type requires them
+      };
+      // Pass the correctly typed object to the store
+      selectDate(storeReadyDate);
+
     } else {
       // If the selected calendar date doesn't match an available slot,
-      // simply don't update the store's selectedDate.
-      // The selectedDateObj state still reflects the calendar selection visually.
-      // Optionally, you could clear the visual selection too:
-      // setSelectedDateObj(null);
-      // But for now, we just avoid calling selectDate with null.
+      // don't update the store's selectedDate.
+      console.warn("Clicked date could not be matched in availableDates:", date, availableDates);
+      // Optionally ensure the store knows no date is selected:
+      selectDate(null); // Pass null to the store if no match is found
     }
   };
   

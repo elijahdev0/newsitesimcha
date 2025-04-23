@@ -11,7 +11,7 @@ interface BookingState {
   isLoading: boolean;
   
   selectCourse: (courseId: string) => void;
-  selectDate: (dateId: string) => void;
+  selectDate: (date: CourseDate | null) => void;
   addExtra: (extra: BookingExtra) => void;
   removeExtra: (extraId: string) => void;
   calculateTotal: () => number;
@@ -32,8 +32,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     set({ selectedCourse: course, selectedDate: null });
   },
   
-  selectDate: (dateId) => {
-    const date = courseDates.find(d => d.id === dateId) || null;
+  selectDate: (date) => {
     set({ selectedDate: date });
   },
   
