@@ -6,6 +6,7 @@ import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { courses } from '../../data/courses';
+import { supabase } from '../../lib/supabase'; // Import Supabase client
 
 // --- Placeholder Data (Replace with actual data fetching later) ---
 interface UserStatus {
@@ -38,6 +39,10 @@ const AdminDashboard: React.FC = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id || '');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [maxParticipants, setMaxParticipants] = useState<number>(10); // Add state for max participants
+  const [isScheduling, setIsScheduling] = useState<boolean>(false); // Add loading state
+  const [scheduleError, setScheduleError] = useState<string | null>(null); // Add error state
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null); // Add success state
 
   const handleCheckboxChange = (userId: string, statusKey: keyof Omit<UserStatus, 'id' | 'firstName' | 'lastName' | 'email' | 'phone'>) => {
     setUserStatuses(prevStatuses =>
@@ -49,18 +54,53 @@ const AdminDashboard: React.FC = () => {
     console.log(`Status "${statusKey}" changed for user ${userId}`);
   };
 
-  const handleScheduleCourse = () => {
-    if (!selectedCourseId || !startDate || !endDate) {
-      alert('Please select a course and both start and end dates.');
+  const handleScheduleCourse = async () => { // Make function async
+    setScheduleError(null); // Clear previous errors/success
+    setScheduleSuccess(null);
+
+    if (!selectedCourseId || !startDate || !endDate || maxParticipants <= 0) {
+      setScheduleError('Please select a course, valid start/end dates, and set max participants (> 0).');
       return;
     }
-    // TODO: Add backend call to schedule the date
-    console.log(`Scheduling course ${selectedCourseId} from ${startDate} to ${endDate}`);
-    alert(`Course ${courses.find(c => c.id === selectedCourseId)?.title} scheduled! (Check console)`);
-    // Optionally reset fields
-    // setSelectedCourseId(courses[0]?.id || '');
-    // setStartDate('');
-    // setEndDate('');
+
+    setIsScheduling(true); // Set loading state
+
+    try {
+      // Prepare data for Supabase (ensure dates are in ISO format if needed)
+      // Supabase typically handles JS Date objects or ISO strings well
+      const newCourseDate = {
+        course_id: selectedCourseId,
+        start_date: new Date(startDate).toISOString(), // Ensure ISO format
+        end_date: new Date(endDate).toISOString(),   // Ensure ISO format
+        max_participants: maxParticipants,
+        // current_participants defaults to 0 in the database or via trigger? Assume 0.
+      };
+
+      // Perform the insert operation
+      const { data, error } = await supabase
+        .from('course_dates')
+        .insert([newCourseDate])
+        .select(); // Optionally select to confirm insertion
+
+      if (error) {
+        console.error("Supabase schedule error:", error);
+        throw new Error(error.message || 'Failed to schedule the course date.');
+      }
+
+      console.log('Course date scheduled successfully:', data);
+      setScheduleSuccess(`Successfully scheduled ${courses.find(c => c.id === selectedCourseId)?.title || 'course'} for ${startDate}.`);
+
+      // Optionally reset fields after success
+      // setSelectedCourseId(courses[0]?.id || '');
+      // setStartDate('');
+      // setEndDate('');
+      // setMaxParticipants(10);
+
+    } catch (err: any) {
+      setScheduleError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsScheduling(false); // Clear loading state
+    }
   };
 
   const handleDownloadFiles = (userId: string) => {
@@ -152,7 +192,21 @@ const AdminDashboard: React.FC = () => {
               <CalendarPlus className="w-5 h-5 mr-2 text-accent-500" />
               Schedule New Course Date
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            {/* Error Message */}
+            {scheduleError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold mr-1">Error!</strong>
+                <span className="block sm:inline">{scheduleError}</span>
+              </div>
+            )}
+             {/* Success Message */}
+            {scheduleSuccess && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold mr-1">Success!</strong>
+                <span className="block sm:inline">{scheduleSuccess}</span>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"> {/* Adjusted grid cols */}
               {/* Course Dropdown */}
               <div className="md:col-span-2">
                 <label htmlFor="courseSelect" className="block text-sm font-medium text-gray-700 mb-1">
@@ -200,10 +254,30 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
 
+              {/* Max Participants */}
+              <div>
+                <label htmlFor="maxParticipants" className="block text-sm font-medium text-gray-700 mb-1">
+                  Max Participants
+                </label>
+                <input
+                  type="number"
+                  id="maxParticipants"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(parseInt(e.target.value, 10) || 0)}
+                  min="1"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-accent-500 focus:ring-accent-500 sm:text-sm py-2 px-3"
+                />
+              </div>
+
               {/* Schedule Button */}
-              <div className="md:col-span-4 flex justify-end mt-4">
-                 <Button variant="primary" onClick={handleScheduleCourse}>
-                   Schedule Course Date
+              <div className="md:col-span-5 flex justify-end mt-4"> {/* Adjusted grid span */}
+                 <Button
+                    variant="primary"
+                    onClick={handleScheduleCourse}
+                    disabled={isScheduling} // Disable button while scheduling
+                    isLoading={isScheduling} // Show loading state on button
+                  >
+                   {isScheduling ? 'Scheduling...' : 'Schedule Course Date'}
                  </Button>
               </div>
             </div>

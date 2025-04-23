@@ -110,6 +110,11 @@ const BookingFlow: React.FC = () => {
   const formatDateStr = (date: Date): string => {
     return format(date, 'MMM d, yyyy');
   };
+
+  // Format date and time for display
+  const formatDateTimeStr = (date: Date): string => {
+    return format(date, 'MMM d, yyyy HH:mm'); // e.g., Apr 23, 2024 14:30
+  };
   
   // Handle date selection from calendar
   const handleDateSelection = (date: Date) => {
@@ -617,7 +622,11 @@ const BookingFlow: React.FC = () => {
                           <div className="mb-4">
                             <h4 className="font-semibold text-tactical-900">Selected Date:</h4>
                             <p className="text-tactical-700">
-                              {formatDateStr(new Date(fullSelectedDate.start_date))} to {formatDateStr(new Date(fullSelectedDate.end_date))}
+                              {/* Use formatDateTimeStr for full details */}
+                              Starts: {formatDateTimeStr(new Date(fullSelectedDate.start_date))}
+                            </p>
+                            <p className="text-tactical-700">
+                              Ends:   {formatDateTimeStr(new Date(fullSelectedDate.end_date))}
                             </p>
                             <p className="text-sm text-tactical-600 mt-1">
                               Duration: {selectedCourse.duration} days
