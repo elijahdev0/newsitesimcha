@@ -11,6 +11,7 @@ import { Booking, Course } from '../../types';
 import { courses } from '../../data/courses';
 import { Modal } from '../../components/common/Modal';
 import Courses from '../Courses';
+import { BookingInformationForm } from '../../components/dashboard/BookingInformationForm';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const Dashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isInfoFormModalOpen, setIsInfoFormModalOpen] = useState(false);
+  const [selectedBookingIdForForm, setSelectedBookingIdForForm] = useState<string | null>(null);
 
   // Load Calendly script
   useEffect(() => {
@@ -61,6 +64,56 @@ const Dashboard: React.FC = () => {
   };
 
   const showOverallLoading = isAuthLoading || isLoadingBookings;
+
+  // --- Modal Handlers ---
+
+  // Helper function to open the info form modal
+  const openInfoFormModal = (bookingId: string) => {
+    setSelectedBookingIdForForm(bookingId);
+    setIsInfoFormModalOpen(true);
+  };
+
+  // Helper function to close the info form modal
+  const closeInfoFormModal = () => {
+    setIsInfoFormModalOpen(false);
+    setSelectedBookingIdForForm(null);
+  };
+
+  // Placeholder function to handle form submission
+  // TODO: Replace with actual submission logic (e.g., API call to update booking)
+  const handleInformationFormSubmit = (formData: any) => {
+    console.log('Received form data in Dashboard:', formData);
+    // Mark form as filled (update booking state - this is a mock update)
+    // You'll need a way to actually update the booking status based on the API response
+    // and potentially update the 'isFormFilled' flag on the specific booking
+    setBookings(prevBookings => prevBookings.map(b =>
+      b.id === formData.bookingId ? { ...b, /* isFormFilled: true */ } : b // Update actual status flag later
+    ));
+    closeInfoFormModal(); // Close modal after submission
+    alert('Information form submitted! (Mock update - status change is temporary)');
+  };
+
+  // --- Data Fetching ---
+  useEffect(() => {
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        navigate('/login');
+      } else {
+        const fetchBookings = async () => {
+          setIsLoadingBookings(true);
+          try {
+            const userBookings = await getBookings();
+            setBookings(userBookings);
+          } catch (error) {
+            console.error('Error fetching bookings:', error);
+          } finally {
+            setIsLoadingBookings(false);
+          }
+        };
+        fetchBookings();
+      }
+    }
+  }, [isAuthLoading, isAuthenticated, navigate, getBookings]);
 
   return (
     <>
@@ -243,7 +296,12 @@ const Dashboard: React.FC = () => {
                                   </Button>
                                 )}
                                 {!isFormFilled && (
-                                  <Button variant="outline" size="sm" onClick={() => alert(`Mock: Fill Form for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openInfoFormModal(booking.id)}
+                                    className="flex-grow md:flex-grow-0 justify-center"
+                                  >
                                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Fill Form
                                   </Button>
                                 )}
@@ -364,6 +422,21 @@ const Dashboard: React.FC = () => {
         title="Select Training Package"
       >
         <Courses showLayout={false} />
+      </Modal>
+
+      {/* Information Form Modal */}
+      <Modal
+        isOpen={isInfoFormModalOpen}
+        onClose={closeInfoFormModal}
+        title="Provide Booking Information"
+      >
+        {selectedBookingIdForForm && (
+          <BookingInformationForm
+            bookingId={selectedBookingIdForForm}
+            onClose={closeInfoFormModal}
+            onSubmit={handleInformationFormSubmit}
+          />
+        )}
       </Modal>
     </>
   );
