@@ -193,11 +193,14 @@ const Dashboard: React.FC = () => {
                               {/* Action Required Section */}
                               {showActionRequired && (
                                 <div className="w-full border-t border-gray-200 pt-3 mt-1 mb-4">
-                                  <p className="text-sm font-medium text-tactical-800 mb-2 text-left md:text-right">Complete these steps:</p>
+                                  <p className="text-sm font-medium text-tactical-800 mb-1 text-left md:text-right">Reserve Your Spot:</p>
+                                  <p className="text-xs text-tactical-600 mb-2 text-left md:text-right">
+                                    Complete these steps to confirm your booking. The €1000 deposit secures your place.
+                                  </p>
                                   <ul className="space-y-1.5 text-sm text-tactical-700 text-left md:text-right">
                                     <ActionItem label="Upload Required Documents" isComplete={isDocsUploaded} IconComponent={Upload} />
                                     <ActionItem label="Fill Out Information Form" isComplete={isFormFilled} IconComponent={FileText} />
-                                    <ActionItem label={`Pay Deposit (${formatCurrency(depositAmount)})`} isComplete={isDepositPaid} IconComponent={CreditCard} />
+                                    <ActionItem label={`Pay €1000 Deposit (Required)`} isComplete={isDepositPaid} IconComponent={CreditCard} />
                                   </ul>
                                 </div>
                               )}
@@ -223,7 +226,7 @@ const Dashboard: React.FC = () => {
                                     {/* Show Pay Full button only if deposit is not sufficient for full amount */}
                                     {booking.totalAmount > depositAmount && (
                                       <Button variant="primary" size="sm" onClick={() => alert(`Mock: Pay Full for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
-                                        Pay Full ({formatCurrency(booking.totalAmount)})
+                                        Pay Full ({formatCurrency(booking.totalAmount)}) (Optional)
                                       </Button>
                                     )}
                                   </>
