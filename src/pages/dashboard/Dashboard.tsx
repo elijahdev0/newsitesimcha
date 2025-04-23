@@ -303,14 +303,17 @@ const Dashboard: React.FC = () => {
         }
 
         // Process verificationData as before
-        if (verificationData.success && verificationData.status === 'paid') {
-          setPaymentStatusMessage({ type: 'success', message: 'Deposit payment successful! Your booking is updated.' });
+        if (verificationData.success && (verificationData.status === 'paid' || verificationData.status === 'deposit_paid')) {
+          const successMessage = verificationData.status === 'deposit_paid' 
+            ? 'Deposit payment successful! Your booking is updated.' 
+            : 'Payment successful! Your booking is fully paid.';
+          setPaymentStatusMessage({ type: 'success', message: successMessage });
           // Refresh bookings to show updated status
           fetchUserBookings();
         } else {
-           // Handle cases where verification succeeded but payment wasn't 'paid' (e.g., session expired)
-           console.warn('Payment verification complete, but status was not paid:', verificationData.status);
-           setPaymentStatusMessage({ type: 'info', message: `Payment status: ${verificationData.status || 'pending'}. Please check again later or contact support.` });
+          // Handle cases where verification succeeded but payment wasn't successful
+          console.warn('Payment verification complete, but status was not successful:', verificationData.status);
+          setPaymentStatusMessage({ type: 'info', message: `Payment status: ${verificationData.status || 'pending'}. Please check again later or contact support.` });
         }
 
       } catch (error: any) {

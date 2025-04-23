@@ -43,27 +43,60 @@ serve(async (req) => {
           throw new Error('Could not identify booking from Stripe session.')
       }
 
+      // First, fetch the booking to check current status and find out what payment this is
+      const { data: booking, error: bookingFetchError } = await supabase
+        .from('bookings')
+        .select('id, total_amount, payment_status')
+        .eq('id', bookingId)
+        .single();
+      
+      if (bookingFetchError || !booking) {
+        console.error('Error fetching booking details:', bookingFetchError);
+        throw new Error('Failed to retrieve booking details.');
+      }
+
+      // Get the line item to determine the payment amount
+      const lineItems = await stripe.checkout.sessions.listLineItems(session_id);
+      const amountPaid = lineItems.data.length > 0 ? lineItems.data[0].amount_total : 0;
+      
+      // Default deposit amount (must match create-stripe-checkout)
+      const DEPOSIT_AMOUNT_CENTS = 100000; // €1000
+      
+      // Determine if this is a deposit payment or a full payment based on amount
+      let newPaymentStatus = 'deposit_paid';
+      
+      // Check if this was a remaining balance payment after a deposit
+      if (booking.payment_status === 'deposit_paid') {
+        newPaymentStatus = 'paid'; // This was the remaining balance payment
+        console.log(`Processing remaining balance payment for booking ${bookingId}`);
+      } 
+      // Check if this is a full payment (approximately equal to total amount)
+      else if (amountPaid >= (booking.total_amount * 100 * 0.95)) { // 5% tolerance for rounding 
+        newPaymentStatus = 'paid';
+        console.log(`Processing full payment for booking ${bookingId}`);
+      }
+      // Otherwise it's just a deposit payment
+      else {
+        console.log(`Processing deposit payment for booking ${bookingId}`);
+      }
+
       // Update the booking status in your database
-      // Recommendation: Use a more specific status like 'deposit_paid'
-      // You might also want to store the session.id in your booking table
       const { error: updateError } = await supabase
         .from('bookings')
         .update({
-          payment_status: 'deposit_paid', // Changed from 'paid' to 'deposit_paid'
+          payment_status: newPaymentStatus,
           // stripe_checkout_session_id: session.id, // Optional: Add this column to your table
           updated_at: new Date().toISOString()
         })
-        .eq('id', bookingId)
-        // Optional: Add check for current status to prevent double updates
-        // .neq('payment_status', 'paid') 
+        .eq('id', bookingId);
 
       if (updateError) {
         console.error('Supabase booking update error:', updateError);
         throw new Error('Failed to update booking status after payment confirmation.');
       }
 
-      console.log(`Booking ${bookingId} marked as deposit paid successfully.`);
-      return new Response(JSON.stringify({ success: true, bookingId: bookingId, status: 'deposit_paid' }), {
+      console.log(`Booking ${bookingId} marked as ${newPaymentStatus} successfully.`);
+      return new Response(JSON.stringify({ success: true, bookingId: bookingId, status: newPaymentStatus }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
