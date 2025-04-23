@@ -77,8 +77,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         userId: 'current-user', // This would normally come from the auth context
         courseId: selectedCourse.id,
         courseDateId: selectedDate.id,
-        status: 'confirmed',
-        paymentStatus: 'paid',
+        status: 'pending',
+        paymentStatus: 'pending',
         totalAmount: get().calculateTotal(),
         createdAt: new Date().toISOString(),
         extras: selectedExtras

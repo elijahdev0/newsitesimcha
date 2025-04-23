@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Check, ChevronRight, Package, Calendar, CreditCard } from 'lucide-react';
+import { Check, ChevronRight, Package, Calendar, CheckCircle, Info } from 'lucide-react'; // Added CheckCircle/Info for confirmation step
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
@@ -16,13 +15,7 @@ import { extras } from '../../data/extras';
 import { courseDates } from '../../data/dates';
 import { CourseDate, Extra, BookingExtra } from '../../types';
 
-// Payment form type
-type PaymentFormData = {
-  cardName: string;
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-};
+// Removed Payment form type
 
 const BookingFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -36,7 +29,7 @@ const BookingFlow: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isBookingComplete, setIsBookingComplete] = useState(false);
   
-  const { register, handleSubmit, formState: { errors } } = useForm<PaymentFormData>();
+  // Removed useForm hook for payment
   
   // Filter extras by category for better organization
   const experienceExtras = extras.filter(extra => extra.category === 'experience');
@@ -76,7 +69,7 @@ const BookingFlow: React.FC = () => {
     try {
       await createBooking();
       setIsBookingComplete(true);
-      setStep(4);
+      setStep(3); // Set step to 3 (Confirmation) after booking
     } catch (error) {
       console.error('Booking failed:', error);
     } finally {
@@ -119,6 +112,22 @@ const BookingFlow: React.FC = () => {
       setAvailableDates(dates);
     }
   }, [courseId, isAuthenticated, navigate, resetSelection, selectCourse]);
+
+  // Load Calendly script - Ideally, this should be in index.html or loaded globally
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      // Clean up script when component unmounts
+      const existingScript = document.querySelector(`script[src="${script.src}"]`);
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
+  }, []);
   
   if (!selectedCourse) {
     return (
@@ -160,16 +169,17 @@ const BookingFlow: React.FC = () => {
                 </div>
                 <span className="text-sm mt-2">Schedule</span>
               </div>
-              
+
               <div className="flex-1 flex items-center">
                 <div className={`flex-1 h-1 ${step >= 3 ? 'bg-accent-500' : 'bg-tactical-200'}`}></div>
               </div>
-              
+
               <div className={`flex flex-col items-center ${step >= 3 ? 'text-accent-600' : 'text-tactical-400'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-accent-600 text-white' : 'bg-tactical-200 text-tactical-600'}`}>
-                  {step > 3 ? <Check className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                  {/* Use CheckCircle for confirmation, Check when done */}
+                  {step > 3 ? <Check className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
                 </div>
-                <span className="text-sm mt-2">Payment</span>
+                <span className="text-sm mt-2">Confirmation</span> {/* Added Confirmation step text */}
               </div>
             </div>
           </div>
@@ -436,218 +446,59 @@ const BookingFlow: React.FC = () => {
                   </Button>
                   <Button
                     variant="primary"
-                    onClick={nextStep}
-                    disabled={!selectedDate}
+                    onClick={completeBooking} // Changed to completeBooking
+                    disabled={!selectedDate || isLoading} // Added isLoading check
+                    isLoading={isLoading} // Added isLoading prop
                   >
-                    Continue to Payment
-                    <ChevronRight className="ml-2 w-5 h-5" />
+                    Complete Booking {/* Changed text */}
+                    {/* Removed ChevronRight icon */}
                   </Button>
                 </div>
               </div>
             )}
             
-            {/* Step 3: Payment */}
-            {step === 3 && (
-              <div className="bg-white rounded-xl shadow-md p-8">
-                <h1 className="font-heading text-2xl font-bold text-tactical-900 mb-8">
-                  3. Payment Details
-                </h1>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="font-medium text-tactical-900 mb-4">Booking Summary</h3>
-                    <div className="border border-gray-200 rounded-lg p-6">
-                      <div className="mb-4">
-                        <h4 className="font-heading text-lg font-semibold text-tactical-900">{selectedCourse.title}</h4>
-                        <p className="text-tactical-700 text-sm">
-                          {formatDateStr(new Date(selectedDate!.startDate))} to {formatDateStr(new Date(selectedDate!.endDate))}
-                        </p>
-                      </div>
-                      
-                      <div className="border-t border-gray-200 my-4 pt-4">
-                        <div className="flex justify-between mb-2">
-                          <span className="text-tactical-700">Package Price:</span>
-                          <span className="font-medium">{formatCurrency(selectedCourse.price)}</span>
-                        </div>
-                        
-                        {selectedExtras.length > 0 && (
-                          <>
-                            {selectedExtras.map(extra => (
-                              <div key={extra.id} className="flex justify-between mb-2">
-                                <span className="text-tactical-700">{extra.name}:</span>
-                                <span className="font-medium">{formatCurrency(extra.price)}</span>
-                              </div>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                      
-                      <div className="border-t border-gray-200 pt-4">
-                        <div className="flex justify-between">
-                          <span className="font-semibold text-tactical-900">Total Amount:</span>
-                          <span className="font-bold text-tactical-900">{formatCurrency(calculateTotal())}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <h3 className="font-medium text-tactical-900 mb-4">Important Information</h3>
-                      <div className="bg-tactical-50 p-4 rounded-lg text-sm text-tactical-700">
-                        <p className="mb-2">
-                          <span className="font-semibold">Deposit:</span> 50% deposit is required to secure your booking.
-                        </p>
-                        <p className="mb-2">
-                          <span className="font-semibold">Cancellation Policy:</span> All deposits are non-refundable. 
-                          Rescheduling must be done at least 30 days in advance.
-                        </p>
-                        <p>
-                          <span className="font-semibold">Final Payment:</span> Full payment is due 14 days before training begins.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium text-tactical-900 mb-4">Payment Method</h3>
-                    
-                    <form onSubmit={handleSubmit(completeBooking)}>
-                      <div className="mb-4">
-                        <label htmlFor="cardName" className="block text-sm font-medium text-tactical-700 mb-1">
-                          Name on Card
-                        </label>
-                        <input
-                          id="cardName"
-                          type="text"
-                          className={`
-                            w-full px-3 py-2 border rounded-md text-tactical-900
-                            ${errors.cardName ? 'border-red-500' : 'border-gray-300'}
-                            focus:outline-none focus:ring-2 focus:ring-tactical-400
-                          `}
-                          placeholder="John Doe"
-                          {...register('cardName', { required: 'Name is required' })}
-                        />
-                        {errors.cardName && (
-                          <p className="mt-1 text-sm text-red-600">{errors.cardName.message}</p>
-                        )}
-                      </div>
-                      
-                      <div className="mb-4">
-                        <label htmlFor="cardNumber" className="block text-sm font-medium text-tactical-700 mb-1">
-                          Card Number
-                        </label>
-                        <input
-                          id="cardNumber"
-                          type="text"
-                          className={`
-                            w-full px-3 py-2 border rounded-md text-tactical-900
-                            ${errors.cardNumber ? 'border-red-500' : 'border-gray-300'}
-                            focus:outline-none focus:ring-2 focus:ring-tactical-400
-                          `}
-                          placeholder="4242 4242 4242 4242"
-                          {...register('cardNumber', { 
-                            required: 'Card number is required',
-                            pattern: {
-                              value: /^[0-9]{16}$/,
-                              message: 'Enter a valid 16-digit card number'
-                            } 
-                          })}
-                        />
-                        {errors.cardNumber && (
-                          <p className="mt-1 text-sm text-red-600">{errors.cardNumber.message}</p>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div>
-                          <label htmlFor="expiry" className="block text-sm font-medium text-tactical-700 mb-1">
-                            Expiry Date
-                          </label>
-                          <input
-                            id="expiry"
-                            type="text"
-                            className={`
-                              w-full px-3 py-2 border rounded-md text-tactical-900
-                              ${errors.expiry ? 'border-red-500' : 'border-gray-300'}
-                              focus:outline-none focus:ring-2 focus:ring-tactical-400
-                            `}
-                            placeholder="MM/YY"
-                            {...register('expiry', { 
-                              required: 'Expiry date is required',
-                              pattern: {
-                                value: /^(0[1-9]|1[0-2])\/([0-9]{2})$/,
-                                message: 'Enter a valid expiry date (MM/YY)'
-                              } 
-                            })}
-                          />
-                          {errors.expiry && (
-                            <p className="mt-1 text-sm text-red-600">{errors.expiry.message}</p>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="cvc" className="block text-sm font-medium text-tactical-700 mb-1">
-                            CVC
-                          </label>
-                          <input
-                            id="cvc"
-                            type="text"
-                            className={`
-                              w-full px-3 py-2 border rounded-md text-tactical-900
-                              ${errors.cvc ? 'border-red-500' : 'border-gray-300'}
-                              focus:outline-none focus:ring-2 focus:ring-tactical-400
-                            `}
-                            placeholder="123"
-                            {...register('cvc', { 
-                              required: 'CVC is required',
-                              pattern: {
-                                value: /^[0-9]{3,4}$/,
-                                message: 'Enter a valid CVC'
-                              } 
-                            })}
-                          />
-                          {errors.cvc && (
-                            <p className="mt-1 text-sm text-red-600">{errors.cvc.message}</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={prevStep}
-                        >
-                          Back to Schedule
-                        </Button>
-                        <Button
-                          type="submit"
-                          variant="accent"
-                          isLoading={isLoading}
-                        >
-                          Complete Booking
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Removed Step 3: Payment */}
             
-            {/* Step 4: Confirmation */}
-            {step === 4 && isBookingComplete && (
+            {/* Step 3: Confirmation & Next Steps */}
+            {step === 3 && isBookingComplete && (
               <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Check className="w-10 h-10 text-green-600" />
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Info className="w-10 h-10 text-blue-600" /> {/* Changed Icon */}
                 </div>
                 <h1 className="font-heading text-2xl font-bold text-tactical-900 mb-4">
-                  Booking Confirmed!
+                  Booking Received - Action Required! {/* Changed Title */}
                 </h1>
-                <p className="text-tactical-700 mb-8 max-w-lg mx-auto">
-                  Your booking for {selectedCourse.title} has been confirmed. You will receive a confirmation email with all the details shortly.
+                <p className="text-tactical-700 mb-6 max-w-xl mx-auto">
+                  Thank you! We've received your booking request for {selectedCourse.title}.
+                  <strong className="text-accent-700"> Your place is NOT reserved yet.</strong>
+                  To confirm your spot, please complete the following steps in your dashboard:
+                </p>
+                <ul className="list-disc list-inside text-left max-w-md mx-auto mb-8 text-tactical-700 space-y-2">
+                  <li>Submit the <strong className="font-semibold">€1000 deposit</strong>.</li>
+                  <li>Complete your <strong className="font-semibold">User Details Form</strong>.</li>
+                  <li>Upload required <strong className="font-semibold">Documents</strong>.</li>
+                </ul>
+
+                <p className="text-tactical-700 mb-8 max-w-xl mx-auto">
+                  Additionally, please schedule a mandatory introductory meeting with your instructor using the link below.
                 </p>
                 
-                <div className="bg-tactical-50 p-6 rounded-lg max-w-md mx-auto mb-8">
-                  <h3 className="font-semibold text-tactical-900 mb-4">Booking Summary</h3>
+                {/* Calendly Link */}
+                <div className="mb-8">
+                  <a
+                    href=""
+                    onClick={(e) => {
+                      e.preventDefault();
+                      (window as any).Calendly.initPopupWidget({url: 'https://calendly.com/rosh-en-ab-d-ulla-h27'});
+                    }}
+                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-600 hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500"
+                  >
+                    Schedule Instructor Meeting (Required)
+                  </a>
+                </div>
+
+                <div className="bg-tactical-50 p-6 rounded-lg max-w-md mx-auto mb-8 border border-tactical-200">
+                  <h3 className="font-semibold text-tactical-900 mb-4">Provisional Booking Summary</h3>
                   <div className="flex justify-between mb-2">
                     <span className="text-tactical-700">Package:</span>
                     <span className="font-medium">{selectedCourse.title}</span>
@@ -655,7 +506,7 @@ const BookingFlow: React.FC = () => {
                   <div className="flex justify-between mb-2">
                     <span className="text-tactical-700">Dates:</span>
                     <span className="font-medium">
-                      {formatDateStr(new Date(selectedDate!.startDate))} to {formatDateStr(new Date(selectedDate!.endDate))}
+                      {selectedDate ? `${formatDateStr(new Date(selectedDate.startDate))} to ${formatDateStr(new Date(selectedDate.endDate))}` : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between mb-2">
@@ -663,9 +514,10 @@ const BookingFlow: React.FC = () => {
                     <span className="font-medium">S-Arms Shooting Range, Tallinn</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-tactical-700">Total Paid:</span>
+                    <span className="text-tactical-700">Total Amount Due:</span>
                     <span className="font-bold">{formatCurrency(calculateTotal())}</span>
                   </div>
+                   <p className="text-xs text-tactical-600 mt-3">*Deposit of €1000 required to confirm.</p>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -673,14 +525,9 @@ const BookingFlow: React.FC = () => {
                     variant="primary"
                     onClick={() => navigate('/dashboard')}
                   >
-                    Go to Dashboard
+                    Go to Dashboard to Complete Booking
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.print()}
-                  >
-                    Print Receipt
-                  </Button>
+                  {/* Removed Print Receipt Button */}
                 </div>
               </div>
             )}
