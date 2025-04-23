@@ -20,6 +20,21 @@ const Dashboard: React.FC = () => {
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  // Load Calendly script
+  useEffect(() => {
+    const scriptId = 'calendly-widget-script';
+    if (document.getElementById(scriptId)) return; // Prevent duplicate script loading
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Optional: Cleanup function if needed, though script load is usually fine globally
+    // return () => { ... };
+  }, []);
+
   useEffect(() => {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
@@ -115,12 +130,24 @@ const Dashboard: React.FC = () => {
                       // A real implementation would likely involve more detailed status fields.
                       const isDocsUploaded = false; // Assume false for demo
                       const isFormFilled = false;   // Assume false for demo
+                      const isMeetingScheduled = false; // Add mock state for meeting
                       // Simplify mock: Consider paid if booking.paymentStatus is 'paid'
                       const isPaid = booking.paymentStatus === 'paid';
                       const isDepositPaid = isPaid; // Treat 'paid' as having met deposit requirement for demo
                       const isPaidInFull = isPaid;  // Treat 'paid' as full payment for demo
 
-                      const showActionRequired = !(isDocsUploaded && isFormFilled && isDepositPaid);
+                      // Update showActionRequired to include meeting
+                      const showActionRequired = !(isDocsUploaded && isFormFilled && isDepositPaid && isMeetingScheduled);
+
+                      // --- Function to open Calendly --- 
+                      const openCalendly = () => {
+                        if ((window as any).Calendly) {
+                          (window as any).Calendly.initPopupWidget({url: 'https://calendly.com/rosh-en-ab-d-ulla-h27'});
+                        } else {
+                          console.error('Calendly script not loaded yet');
+                          // Optionally, show an error message to the user
+                        }
+                      };
 
                       return (
                         <div
@@ -201,6 +228,8 @@ const Dashboard: React.FC = () => {
                                     <ActionItem label="Upload Required Documents" isComplete={isDocsUploaded} IconComponent={Upload} />
                                     <ActionItem label="Fill Out Information Form" isComplete={isFormFilled} IconComponent={FileText} />
                                     <ActionItem label={`Pay €1000 Deposit (Required)`} isComplete={isDepositPaid} IconComponent={CreditCard} />
+                                    {/* Add ActionItem for meeting */}
+                                    <ActionItem label="Schedule Instructor Meeting" isComplete={isMeetingScheduled} IconComponent={Calendar} />
                                   </ul>
                                 </div>
                               )}
@@ -217,6 +246,12 @@ const Dashboard: React.FC = () => {
                                   <Button variant="outline" size="sm" onClick={() => alert(`Mock: Fill Form for ${booking.id}`)} className="flex-grow md:flex-grow-0 justify-center">
                                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Fill Form
                                   </Button>
+                                )}
+                                {/* Add Schedule Meeting Button */} 
+                                {!isMeetingScheduled && (
+                                   <Button variant="outline" size="sm" onClick={openCalendly} className="flex-grow md:flex-grow-0 justify-center">
+                                     <Calendar className="w-3.5 h-3.5 mr-1.5" /> Schedule Meeting
+                                   </Button>
                                 )}
                                 {!isDepositPaid && (
                                   <>
