@@ -63,8 +63,17 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
       </div>
       
       <div className="bg-tactical-700 px-6 py-4 mt-auto">
-        <Link to={`/book/${course.id}`}>
-          <Button variant="primary" fullWidth>
+        <Link to={`/book/${course.id}`}> 
+          <Button 
+            variant="primary" 
+            fullWidth 
+            className="transition-all duration-150 shadow-md hover:shadow-xl hover:bg-accent-700 hover:text-white hover:scale-[1.03] focus:ring-2 focus:ring-accent-400 focus:outline-none border-2 border-accent-700"
+            style={{
+              background: 'linear-gradient(90deg, #7c1d1d 0%, #b91c1c 100%)',
+              color: '#fff',
+              borderColor: '#b91c1c',
+            }}
+          >
             Book Now
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>

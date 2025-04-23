@@ -203,7 +203,7 @@ const BookingFlow: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       // Pass the courseId in the redirect state
-      navigate('/login', { state: { redirectTo: `/book/${courseId}` } });
+      navigate('/register', { state: { redirectTo: `/book/${courseId}` } });
       return;
     }
     

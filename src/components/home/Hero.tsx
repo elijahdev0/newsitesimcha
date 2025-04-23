@@ -59,7 +59,7 @@ export const Hero: React.FC = () => {
               </Button>
             </Link>
             <Link to="/about">
-              <Button variant="outline" size="lg" className="text-white border-white/30">
+              <Button variant="outline" size="lg" className="text-white border-white/30 bg-transparent hover:bg-transparent focus:bg-transparent">
                 Learn About Our Methodology
               </Button>
             </Link>
