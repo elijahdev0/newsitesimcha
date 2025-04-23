@@ -13,14 +13,16 @@ interface CoursesProps {
 const Courses: React.FC<CoursesProps> = ({ showLayout = true }) => {
   const [filter, setFilter] = useState<string | null>(null);
 
-  const filteredCourses = filter 
+  // Always sort by price descending
+  const filteredCourses = (filter 
     ? courses.filter(course => {
         if (filter === 'premium' && course.price >= 15000) return true;
         if (filter === 'standard' && course.price >= 2000 && course.price < 15000) return true;
         if (filter === 'basic' && course.price < 2000) return true;
         return false;
       })
-    : courses;
+    : courses
+  ).slice().sort((a, b) => b.price - a.price);
 
   return (
     <>

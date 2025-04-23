@@ -20,7 +20,6 @@ export const courses: Course[] = [
       'Media package (photo & video)',
       'Tactical merch kit'
     ],
-    isPopular: true,
     kosherAvailable: true
   },
   {
@@ -43,6 +42,7 @@ export const courses: Course[] = [
       'Tactical merch kit',
       'Certificate of Tactical Excellence'
     ],
+    isPopular: true,
     kosherAvailable: true
   },
   {

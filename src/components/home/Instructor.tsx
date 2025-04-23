@@ -40,7 +40,7 @@ export const Instructor: React.FC = () => {
             </h2>
 
             <p className="text-gray-300 mb-6">
-              With over two decades of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
+              With over five years of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
             </p>
 
             <p className="text-gray-300 mb-8">
@@ -52,7 +52,7 @@ export const Instructor: React.FC = () => {
                 <Medal className="text-accent-500 w-5 h-5 mr-3 mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="font-semibold text-white">Elite Military Background</h4>
-                  <p className="text-gray-400 text-sm">20+ years in special operations and high-risk missions</p>
+                  <p className="text-gray-400 text-sm">5+ years in special operations and high-risk missions</p>
                 </div>
               </div>
               <div className="flex items-start">
