@@ -676,16 +676,26 @@ const Dashboard: React.FC = () => {
                             {/* Right Side - Status, Actions, Payment */}
                             <div className="flex flex-col items-start md:items-end md:min-w-[260px] md:max-w-[300px] flex-shrink-0">
                               {/* Status Badge */}
-                              {isActionRequired ? (
-                                <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
-                                   <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
-                                   Action Required
+                              {booking.paymentStatus === 'paid' ? (
+                                <div className="bg-green-100 text-green-800 border border-green-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 flex items-center">
+                                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                                  Booking Paid in Full & Confirmed
+                                </div>
+                              ) : booking.paymentStatus === 'deposit_paid' ? (
+                                <div className="bg-green-100 text-green-800 border border-green-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 flex items-center">
+                                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                                  Booking Deposit Paid - Spot Reserved
                                 </div>
                               ) : (
-                                <div className="bg-green-100 text-green-800 border border-green-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 capitalize flex items-center">
-                                   <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                                   {/* Refine confirmation text based on payment status */}
-                                   {isPaidInFull ? 'Confirmed & Paid' : (isDepositPaid ? 'Confirmed (Deposit Paid)' : 'Confirmed')}
+                                <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 flex items-center">
+                                  <AlertTriangle className="w-3 h-3 mr-1.5" />
+                                  Action Required
+                                </div>
+                              )}
+                              {/* Show remaining balance notice when only deposit is paid */}
+                              {booking.paymentStatus === 'deposit_paid' && booking.totalAmount > depositAmount && (
+                                <div className="text-sm text-tactical-600 mb-3 w-full text-left md:text-right">
+                                  Remaining balance {formatCurrency(booking.totalAmount - depositAmount)} due before course starts.
                                 </div>
                               )}
 
