@@ -79,8 +79,7 @@ export const BookingInformationForm: React.FC<BookingInformationFormProps> = ({ 
     };
     console.log('Form Data:', formData); // Log for now
     onSubmit(formData); // Pass data up
-    // onClose(); // Close modal after successful submission
-    alert('Form submitted successfully (check console for data).'); // Placeholder
+    // onClose(); // The parent Dashboard component handles closing the modal on success
   };
 
   // Helper for required label

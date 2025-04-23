@@ -50,10 +50,8 @@ export const UploadDocumentForm: React.FC<UploadDocumentFormProps> = ({ bookingI
     }
     // Call the passed uploadFile function to handle the actual upload logic
     uploadFile(bookingId, selectedFile); // Changed from onSubmit
-    // Optionally close modal immediately or wait for onSubmit to finish
+    // Optionally close modal immediately or wait for uploadFile to finish
     // onClose();
-    // Keep the alert for now, or remove if the parent handles feedback
-    alert('Upload initiated (placeholder - check console). In a real app, this would upload the file.');
   };
 
   // Trigger hidden file input click
