@@ -221,6 +221,52 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // --- Handler for paying the remaining balance ---
+  const handlePayRemainingClick = async (booking: DashboardBooking) => {
+    const depositAmountCents = 100000; // Match the Edge Function
+    const totalAmountCents = booking.totalAmount * 100; // Convert total to cents
+    const remainingAmountCents = totalAmountCents - depositAmountCents;
+
+    if (remainingAmountCents <= 0) {
+      console.warn('No remaining balance to pay or calculation error.');
+      setPaymentStatusMessage({ type: 'info', message: 'No remaining balance to pay.' });
+      return;
+    }
+
+    setIsCreatingCheckoutSession(booking.id); // Use booking ID for loading state
+    setPaymentStatusMessage(null);
+    setFormError(null);
+    setUploadError(null);
+
+    try {
+      // Call the same Edge Function, but pass the calculated remaining amount
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        method: 'POST',
+        body: {
+          bookingId: booking.id,
+          amount: remainingAmountCents, // Pass the remaining amount in cents
+        },
+      });
+
+      if (error) {
+        console.error('Error invoking create-stripe-checkout for remaining payment:', error);
+        throw new Error(error.message || 'Failed to initiate remaining payment. Please try again.');
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Function executed for remaining payment but did not return a redirect URL:', data);
+        throw new Error('Missing redirect URL from remaining payment initiation.');
+      }
+
+    } catch (error: any) {
+      console.error('Remaining payment initiation failed:', error);
+      setPaymentStatusMessage({ type: 'error', message: error.message || 'An unexpected error occurred.' });
+      setIsCreatingCheckoutSession(null);
+    }
+  };
+
   // --- Effect to handle redirect back from Stripe ---
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -702,9 +748,15 @@ const Dashboard: React.FC = () => {
                                 {/* --- Pay Remaining (Conditional) --- */}
                                 {isDepositPaid && !isPaidInFull && booking.totalAmount > depositAmount && (
                                   <div className="text-left md:text-right">
-                                     {/* TODO: Implement actual payment logic/link */}
-                                    <Button variant="primary" size="sm" onClick={() => alert(`Redirect to pay remaining for ${booking.id}`)} className="w-full md:w-auto justify-center">
-                                      Pay Remaining ({formatCurrency(booking.totalAmount - depositAmount)})
+                                     {/* Call the new handler */}
+                                    <Button
+                                       variant="primary"
+                                       size="sm"
+                                       onClick={() => handlePayRemainingClick(booking)} // Pass the whole booking object
+                                       className="w-full md:w-auto justify-center"
+                                       disabled={isCreatingCheckoutSession === booking.id || isVerifyingPayment}
+                                     >
+                                       {isCreatingCheckoutSession === booking.id ? 'Processing...' : `Pay Remaining (${formatCurrency(booking.totalAmount - depositAmount)})`}
                                     </Button>
                                   </div>
                                 )}

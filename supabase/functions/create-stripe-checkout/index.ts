@@ -10,9 +10,9 @@ const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
   apiVersion: '2023-10-16', // Use a fixed API version
 })
 
-// Fixed deposit amount (in cents) and currency - adjust as needed
-const DEPOSIT_AMOUNT_CENTS = 100000; // Example: 1000.00 USD/EUR
-const CURRENCY = 'usd'; // Example: 'usd' or 'eur'
+// Default deposit amount (in cents)
+const DEPOSIT_AMOUNT_CENTS = 100000;
+const CURRENCY = 'usd';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,7 +21,9 @@ serve(async (req) => {
   }
 
   try {
-    const { bookingId } = await req.json()
+    // Extract bookingId and optional amount from the request body
+    const { bookingId, amount } = await req.json();
+    console.log('Received request body:', { bookingId, amount }); // Log received amount
 
     if (!bookingId) {
       throw new Error('Missing bookingId in request body');
@@ -42,52 +44,67 @@ serve(async (req) => {
         throw new Error('User not authenticated');
     }
 
-    // Optional: Fetch the booking to verify ownership and get details if needed
+    // Fetch the booking to verify ownership (still useful)
     const { data: booking, error: bookingError } = await supabase
         .from('bookings')
-        .select('id, user_id, total_amount') // Select necessary fields
+        .select('id, user_id, total_amount, payment_status') // Fetch payment_status too
         .eq('id', bookingId)
-        .eq('user_id', user.id) // Ensure the user owns this booking
-        .single(); // Expect only one result
+        .eq('user_id', user.id)
+        .single();
 
     if (bookingError || !booking) {
         console.error('Booking fetch error:', bookingError);
         throw new Error(bookingError?.message || 'Booking not found or user does not have access');
     }
 
-    // Check if deposit is already paid (optional, prevents creating unnecessary sessions)
-    // Add a specific status like 'deposit_paid' to your schema for better tracking
-    // if (booking.payment_status === 'deposit_paid' || booking.payment_status === 'paid') {
-    //    throw new Error('Deposit for this booking has already been paid.');
-    // }
+    // Determine the amount and product details based on whether 'amount' was passed
+    const isPayingRemaining = typeof amount === 'number' && amount > 0;
+    const unitAmount = isPayingRemaining ? amount : DEPOSIT_AMOUNT_CENTS;
+    const productName = isPayingRemaining ? 'Remaining Training Payment' : 'Training Deposit';
+    const productDescription = `Payment for Booking ID: ${bookingId}`;
+
+    // Optional: Add server-side validation for remaining amount
+    if (isPayingRemaining) {
+        const calculatedRemaining = (booking.total_amount * 100) - DEPOSIT_AMOUNT_CENTS;
+        if (amount !== calculatedRemaining) {
+            console.warn(`Client-provided amount (${amount}) does not match server-calculated remaining (${calculatedRemaining}). Using client amount.`);
+            // Decide if you want to throw an error or proceed with the client amount
+            // throw new Error('Provided amount does not match calculated remaining balance.');
+        }
+        // Prevent paying remaining if deposit wasn't paid
+        if (booking.payment_status !== 'deposit_paid') {
+             throw new Error('Cannot pay remaining balance before deposit is paid.');
+        }
+    } else {
+        // Prevent paying deposit if already paid
+        if (booking.payment_status === 'deposit_paid' || booking.payment_status === 'paid') {
+            throw new Error('Deposit for this booking has already been paid.');
+        }
+    }
 
     const appBaseUrl = Deno.env.get('APP_BASE_URL')
+    if (!appBaseUrl) throw new Error('APP_BASE_URL environment variable not set');
     const successUrl = `${appBaseUrl}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${appBaseUrl}/dashboard?payment=cancel`
 
-    // Create Stripe Checkout session
+    // Create Stripe Checkout session using the determined amount and details
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         mode: 'payment',
         line_items: [{
-            // If using a fixed Price ID from your Stripe dashboard:
-            // price: Deno.env.get('STRIPE_DEPOSIT_PRICE_ID'),
-            // quantity: 1,
-            // --- OR ---
-            // If defining the price dynamically:
             price_data: {
                 currency: CURRENCY,
                 product_data: {
-                    name: 'Training Deposit',
-                    description: `Deposit for Booking ID: ${bookingId}`, // Optional description
+                    name: productName,
+                    description: productDescription,
                 },
-                unit_amount: DEPOSIT_AMOUNT_CENTS, // Use the defined deposit amount
+                unit_amount: unitAmount, // Use the determined amount
             },
             quantity: 1,
         }],
         success_url: successUrl,
         cancel_url: cancelUrl,
-        client_reference_id: bookingId, // IMPORTANT: Link the session to your booking ID
+        client_reference_id: bookingId,
         // customer_email: user.email, // Optional: Pre-fill email
     })
 
