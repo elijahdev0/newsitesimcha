@@ -1,0 +1,6 @@
+public.users
+public.course_dates
+public.courses
+public.extras
+public.bookings
+public.booking_extras

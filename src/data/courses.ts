@@ -2,7 +2,7 @@ import { Course, Extra } from '../types';
 
 export const courses: Course[] = [
   {
-    id: 'black-talon',
+    id: 'bb5f1b98-0c56-481b-8372-95bf28a006e7',
     title: 'Black Talon',
     price: 26000,
     duration: 6,
@@ -24,7 +24,7 @@ export const courses: Course[] = [
     kosherAvailable: true
   },
   {
-    id: 'warrior',
+    id: '9199210c-ba5d-45af-a5f4-e717a3f0a803',
     title: 'Warrior',
     price: 16000,
     duration: 5,
@@ -46,7 +46,7 @@ export const courses: Course[] = [
     kosherAvailable: true
   },
   {
-    id: 'combat',
+    id: '88b5c562-5df0-4d35-bd04-918d2d0156db',
     title: 'Combat',
     price: 5700,
     duration: 5,
@@ -65,7 +65,7 @@ export const courses: Course[] = [
     kosherAvailable: true
   },
   {
-    id: 'iron-sight',
+    id: '4cc83f19-67a4-4f5b-b11b-19c865d32405',
     title: 'Iron Sight',
     price: 1000,
     duration: 3,
@@ -79,7 +79,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    id: 'express',
+    id: 'a1c784da-0d1b-42c4-8338-10ad3eeeba82',
     title: 'Express Tactical Retreat',
     price: 2900,
     duration: 2,

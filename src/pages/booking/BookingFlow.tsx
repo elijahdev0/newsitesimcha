@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
@@ -7,29 +7,52 @@ import { Check, ChevronRight, Package, Calendar, CheckCircle, Info } from 'lucid
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
+import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/authStore';
 import { useBookingStore } from '../../store/bookingStore';
 import { formatCurrency } from '../../utils/formatters';
-import { courses } from '../../data/courses';
 import { extras } from '../../data/extras';
-import { courseDates } from '../../data/dates';
-import { CourseDate, Extra, BookingExtra } from '../../types';
+import { Course, CourseDate, Extra, BookingExtra } from '../../types';
 
-// Removed Payment form type
+// Interface for Course data fetched from Supabase (removed slug)
+interface SupabaseCourse {
+  id: string; // UUID
+  title: string;
+  price: number;
+  duration: number;
+  rounds: number; // Added rounds based on usage
+  hotel: string | null;
+  transport: string | null;
+  description: string | null;
+  includes: string[]; // Assuming JSON stored as string array
+  // slug: string; // Removed slug
+  // Add other relevant fields: isPopular, kosherAvailable, etc.
+}
+
+// Supabase types for course_dates
+interface SupabaseCourseDate {
+  id: string;
+  course_id: string; // This should be the UUID from SupabaseCourse.id
+  start_date: string;
+  end_date: string;
+  max_participants: number;
+  current_participants: number;
+  created_at: string;
+}
 
 const BookingFlow: React.FC = () => {
   const navigate = useNavigate();
+  // Use courseId directly from URL params, assuming it's the UUID
   const { courseId } = useParams<{ courseId: string }>();
   const { isAuthenticated } = useAuthStore();
   const { selectCourse, selectedCourse, selectDate, selectedDate, addExtra, removeExtra, selectedExtras, calculateTotal, createBooking, resetSelection } = useBookingStore();
   
   const [step, setStep] = useState(1);
-  const [availableDates, setAvailableDates] = useState<CourseDate[]>([]);
+  const [availableDates, setAvailableDates] = useState<SupabaseCourseDate[]>([]);
   const [selectedDateObj, setSelectedDateObj] = useState<Date | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isBookingComplete, setIsBookingComplete] = useState(false);
-  
-  // Removed useForm hook for payment
+  const [error, setError] = useState<string | null>(null);
   
   // Filter extras by category for better organization
   const experienceExtras = extras.filter(extra => extra.category === 'experience');
@@ -65,13 +88,19 @@ const BookingFlow: React.FC = () => {
   
   // Complete booking
   const completeBooking = async () => {
+    if (!selectedDate) {
+      setError("Please select a date before completing the booking.");
+      return;
+    }
     setIsLoading(true);
+    setError(null);
     try {
       await createBooking();
       setIsBookingComplete(true);
       setStep(3); // Set step to 3 (Confirmation) after booking
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking failed:', error);
+      setError(`Booking failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -85,33 +114,135 @@ const BookingFlow: React.FC = () => {
   // Handle date selection from calendar
   const handleDateSelection = (date: Date) => {
     setSelectedDateObj(date);
-    
+    setError(null); // Clear error when selecting a date
+
     const selectedCourseDate = availableDates.find(
-      d => new Date(d.startDate).toDateString() === date.toDateString()
+      // Compare ISO string date parts for reliable matching
+      d => new Date(d.start_date).toDateString() === date.toDateString()
     );
-    
+
     if (selectedCourseDate) {
+      // Pass the ID to the store function if it expects only a string
       selectDate(selectedCourseDate.id);
+    } else {
+      // If the selected calendar date doesn't match an available slot,
+      // simply don't update the store's selectedDate.
+      // The selectedDateObj state still reflects the calendar selection visually.
+      // Optionally, you could clear the visual selection too:
+      // setSelectedDateObj(null);
+      // But for now, we just avoid calling selectDate with null.
     }
   };
+  
+  // Fetch dates from Supabase
+  const fetchDates = useCallback(async (courseUuid: string) => {
+    if (!courseUuid) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log(`Fetching dates for course UUID: ${courseUuid}`); // Debug log
+      const { data, error: fetchError } = await supabase
+        .from('course_dates')
+        .select('*')
+        .eq('course_id', courseUuid)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true });
+
+      if (fetchError) {
+        console.error('Supabase fetchDates error:', fetchError); // Log the specific error
+        throw fetchError;
+      }
+
+      const available = (data as SupabaseCourseDate[]).filter(
+        d => d.current_participants < d.max_participants
+      );
+
+      console.log('Available dates fetched:', available); // Debug log
+      setAvailableDates(available || []);
+    } catch (err: any) {
+      console.error('Error in fetchDates function:', err); // Log the error
+      setError(`Failed to fetch available dates: ${err.message}.`);
+      setAvailableDates([]); // Clear dates on error
+    } finally {
+      // Loading state is handled by the initial fetch function
+      setIsLoading(false);
+    }
+  }, []);
   
   // Initialize booking with selected course
   useEffect(() => {
     if (!isAuthenticated) {
+      // Pass the courseId in the redirect state
       navigate('/login', { state: { redirectTo: `/book/${courseId}` } });
       return;
     }
     
     resetSelection();
     
+    // Use courseId (UUID) directly
     if (courseId) {
-      selectCourse(courseId);
-      
-      // Get available dates for this course
-      const dates = courseDates.filter(date => date.courseId === courseId);
-      setAvailableDates(dates);
+      setIsLoading(true);
+      setError(null);
+      setAvailableDates([]); // Clear previous dates
+
+      const fetchCourseAndDates = async () => {
+        if (!courseId) {
+          setError('Course identifier missing from URL.');
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          console.log(`Fetching course with ID: ${courseId}`); // Debug log
+          // Fetch the course using the ID from the URL
+          const { data: courseData, error: courseError } = await supabase
+            .from('courses')
+            .select('*') // Select all columns
+            .eq('id', courseId) // Match the ID (UUID)
+            .single(); // Expect only one course
+
+          if (courseError) {
+            console.error('Supabase fetchCourse error:', courseError);
+            // Handle potential 'PGRST116' error if no rows found
+            if (courseError.code === 'PGRST116') {
+              throw new Error(`Course with ID '${courseId}' not found.`);
+            }
+            throw new Error(`Database error fetching course: ${courseError.message}`);
+          }
+
+          if (!courseData) {
+            // This case might be redundant if .single() throws PGRST116, but good for safety
+            throw new Error(`Course with ID '${courseId}' not found.`);
+          }
+
+          const fetchedCourse = courseData as SupabaseCourse;
+          console.log('Fetched course:', fetchedCourse); // Debug log
+
+          // Set the selected course in the store using the ID
+          // Pass the course ID string to the store
+          selectCourse(fetchedCourse.id);
+
+          // Now fetch dates using the ID of the fetched course
+          await fetchDates(fetchedCourse.id);
+
+        } catch (err: any) {
+          console.error('Error fetching course or dates:', err); // Log the error
+          setError(err.message || 'An unexpected error occurred while loading course data.');
+          // Pass an empty string to indicate no course selected on error
+          selectCourse('');
+        } finally {
+          setIsLoading(false); // Stop loading after course and dates are fetched (or failed)
+        }
+      };
+
+      fetchCourseAndDates();
+
+      // Cleanup function
+      return () => {
+        resetSelection();
+      };
     }
-  }, [courseId, isAuthenticated, navigate, resetSelection, selectCourse]);
+  }, [courseId, isAuthenticated, navigate, resetSelection, selectCourse, fetchDates]); // Use courseId in dependency array
 
   // Load Calendly script - Ideally, this should be in index.html or loaded globally
   useEffect(() => {
@@ -129,14 +260,46 @@ const BookingFlow: React.FC = () => {
     };
   }, []);
   
-  if (!selectedCourse) {
+  if (isLoading) {
     return (
       <>
         <Header />
         <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
           <div className="container mx-auto px-4 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tactical-700 mx-auto"></div>
-            <p className="mt-4">Loading course details...</p>
+            <p className="mt-4">Loading course details and dates...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+  
+  if (error && !selectedCourse) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6 max-w-3xl mx-auto" role="alert">
+              <strong className="font-bold mr-2">Error!</strong>
+              <span className="block sm:inline">{error}</span>
+              <p className="mt-2 text-sm">Please check the course identifier in the URL or try again later.</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+  
+  if (!selectedCourse) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <p>Could not load course details. Please try again.</p>
           </div>
         </main>
         <Footer />
@@ -201,15 +364,17 @@ const BookingFlow: React.FC = () => {
                       {formatCurrency(selectedCourse.price)}
                     </div>
                     <p className="text-tactical-700 mb-4">
-                      {selectedCourse.description}
+                      {selectedCourse.description || 'No description available.'}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
                         {selectedCourse.duration} days
                       </span>
-                      <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
-                        {selectedCourse.rounds} rounds
-                      </span>
+                      {typeof selectedCourse.rounds === 'number' && (
+                        <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
+                          {selectedCourse.rounds} rounds
+                        </span>
+                      )}
                       {selectedCourse.hotel && (
                         <span className="bg-tactical-100 text-tactical-800 rounded-full px-3 py-1 text-xs font-medium">
                           Accommodation
@@ -217,7 +382,7 @@ const BookingFlow: React.FC = () => {
                       )}
                     </div>
                     <ul className="space-y-2">
-                      {selectedCourse.includes.map((feature, i) => (
+                      {(selectedCourse.includes || []).map((feature, i) => (
                         <li key={i} className="flex items-start">
                           <span className="text-accent-500 mr-2 font-bold">✓</span>
                           <span className="text-sm text-tactical-700">{feature}</span>
@@ -252,6 +417,17 @@ const BookingFlow: React.FC = () => {
                                 {formatCurrency(extra.price)}
                               </span>
                             </div>
+                            <button
+                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
+                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExtra(extra as BookingExtra);
+                              }}
+                            >
+                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -280,6 +456,17 @@ const BookingFlow: React.FC = () => {
                                 {formatCurrency(extra.price)}
                               </span>
                             </div>
+                            <button
+                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
+                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExtra(extra as BookingExtra);
+                              }}
+                            >
+                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -308,6 +495,17 @@ const BookingFlow: React.FC = () => {
                                 {formatCurrency(extra.price)}
                               </span>
                             </div>
+                            <button
+                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
+                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExtra(extra as BookingExtra);
+                              }}
+                            >
+                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -360,77 +558,111 @@ const BookingFlow: React.FC = () => {
                 <h1 className="font-heading text-2xl font-bold text-tactical-900 mb-8">
                   2. Select Training Dates
                 </h1>
-                
+                {error && !isLoading && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+                    <strong className="font-bold mr-2">Error!</strong>
+                    <span className="block sm:inline">{error}</span>
+                  </div>
+                )}
+                {isLoading && !availableDates.length && (
+                  <div className="text-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tactical-700 mx-auto mb-3"></div>
+                    <p>Loading Available Dates...</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <h3 className="font-medium text-tactical-900 mb-4">Available Dates</h3>
-                    <div className="bg-tactical-50 p-4 rounded-lg">
-                      <DatePicker
-                        selected={selectedDateObj}
-                        onChange={handleDateSelection}
-                        includeDates={availableDates.map(date => new Date(date.startDate))}
-                        inline
-                        minDate={new Date()}
-                        className="w-full border rounded-md p-2"
-                      />
-                    </div>
+                    {!isLoading && availableDates.length === 0 && !error && (
+                      <div className="bg-tactical-50 p-4 rounded-lg text-center text-tactical-600">
+                        <Calendar className="w-10 h-10 mx-auto mb-2 text-tactical-400" />
+                        No available dates found for this course at the moment.
+                      </div>
+                    )}
+                    {availableDates.length > 0 && (
+                      <div className="bg-tactical-50 p-4 rounded-lg">
+                        <DatePicker
+                          selected={selectedDateObj}
+                          onChange={handleDateSelection}
+                          includeDates={availableDates.map(date => new Date(date.start_date))}
+                          inline
+                          minDate={new Date()}
+                          className="w-full border rounded-md p-2"
+                          highlightDates={availableDates.map(date => new Date(date.start_date))}
+                        />
+                      </div>
+                    )}
                     <p className="text-sm text-tactical-600 mt-4">
-                      * Green dates indicate available training slots. Select a date to view details.
+                      * Highlighted dates indicate available training slots. Select a date to view details.
                     </p>
                   </div>
                   
                   <div>
                     <h3 className="font-medium text-tactical-900 mb-4">Training Details</h3>
-                    
-                    {selectedDate ? (
-                      <div className="border border-gray-200 rounded-lg p-6">
-                        <div className="mb-4">
-                          <h4 className="font-semibold text-tactical-900">Selected Date:</h4>
-                          <p className="text-tactical-700">
-                            {formatDateStr(new Date(selectedDate.startDate))} to {formatDateStr(new Date(selectedDate.endDate))}
-                          </p>
-                          <p className="text-sm text-tactical-600 mt-1">
-                            Duration: {selectedCourse.duration} days
-                          </p>
-                        </div>
-                        
-                        <div className="mb-4">
-                          <h4 className="font-semibold text-tactical-900">Location:</h4>
-                          <p className="text-tactical-700">S-Arms Shooting Range, Tallinn, Estonia</p>
-                        </div>
-                        
-                        <div className="mb-4">
-                          <h4 className="font-semibold text-tactical-900">Availability:</h4>
-                          <p className="text-tactical-700">
-                            {selectedDate.maxParticipants - selectedDate.currentParticipants} spots available
-                          </p>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                            <div 
-                              className="bg-accent-600 h-2.5 rounded-full" 
-                              style={{ width: `${(selectedDate.currentParticipants / selectedDate.maxParticipants) * 100}%` }}
-                            ></div>
+                    {selectedDate && (() => {
+                      const fullSelectedDate = availableDates.find(d => d.id === selectedDate.id);
+                      if (!fullSelectedDate) {
+                        return (
+                          <div className="border border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center h-64">
+                            <Info className="w-12 h-12 text-orange-400 mb-4" />
+                            <p className="text-tactical-700 text-center">
+                              Selected date details not found. Please select another date.
+                            </p>
                           </div>
-                        </div>
-                        
-                        {selectedCourse.hotel && (
+                        );
+                      }
+                      return (
+                        <div className="border border-gray-200 rounded-lg p-6">
                           <div className="mb-4">
-                            <h4 className="font-semibold text-tactical-900">Accommodation:</h4>
-                            <p className="text-tactical-700">{selectedCourse.hotel}</p>
+                            <h4 className="font-semibold text-tactical-900">Selected Date:</h4>
+                            <p className="text-tactical-700">
+                              {formatDateStr(new Date(fullSelectedDate.start_date))} to {formatDateStr(new Date(fullSelectedDate.end_date))}
+                            </p>
+                            <p className="text-sm text-tactical-600 mt-1">
+                              Duration: {selectedCourse.duration} days
+                            </p>
                           </div>
-                        )}
-                        
-                        {selectedCourse.transport && (
-                          <div>
-                            <h4 className="font-semibold text-tactical-900">Transport:</h4>
-                            <p className="text-tactical-700">{selectedCourse.transport}</p>
+                          
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-tactical-900">Location:</h4>
+                            <p className="text-tactical-700">S-Arms Shooting Range, Tallinn, Estonia</p>
                           </div>
-                        )}
-                      </div>
-                    ) : (
+                          
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-tactical-900">Availability:</h4>
+                            <p className="text-tactical-700">
+                              {fullSelectedDate.max_participants - fullSelectedDate.current_participants} spots available
+                            </p>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                              <div 
+                                className="bg-accent-600 h-2.5 rounded-full" 
+                                style={{ width: `${(fullSelectedDate.current_participants / fullSelectedDate.max_participants) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          {selectedCourse.hotel && (
+                            <div className="mb-4">
+                              <h4 className="font-semibold text-tactical-900">Accommodation:</h4>
+                              <p className="text-tactical-700">{selectedCourse.hotel}</p>
+                            </div>
+                          )}
+                          
+                          {selectedCourse.transport && (
+                            <div>
+                              <h4 className="font-semibold text-tactical-900">Transport:</h4>
+                              <p className="text-tactical-700">{selectedCourse.transport}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {!selectedDate && (
                       <div className="border border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center h-64">
                         <Calendar className="w-12 h-12 text-tactical-400 mb-4" />
                         <p className="text-tactical-700 text-center">
-                          Please select a date from the calendar to view training details.
+                          Please select an available date from the calendar to view training details.
                         </p>
                       </div>
                     )}
@@ -446,91 +678,90 @@ const BookingFlow: React.FC = () => {
                   </Button>
                   <Button
                     variant="primary"
-                    onClick={completeBooking} // Changed to completeBooking
-                    disabled={!selectedDate || isLoading} // Added isLoading check
-                    isLoading={isLoading} // Added isLoading prop
+                    onClick={completeBooking}
+                    disabled={!selectedDate || isLoading || !!error || !availableDates.length}
+                    isLoading={!!(isLoading && step === 2)}
                   >
-                    Complete Booking {/* Changed text */}
-                    {/* Removed ChevronRight icon */}
+                    Complete Booking
                   </Button>
                 </div>
               </div>
             )}
-            
-            {/* Removed Step 3: Payment */}
             
             {/* Step 3: Confirmation & Next Steps */}
-            {step === 3 && isBookingComplete && (
-              <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Info className="w-10 h-10 text-blue-600" /> {/* Changed Icon */}
-                </div>
-                <h1 className="font-heading text-2xl font-bold text-tactical-900 mb-4">
-                  Booking Received - Action Required! {/* Changed Title */}
-                </h1>
-                <p className="text-tactical-700 mb-6 max-w-xl mx-auto">
-                  Thank you! We've received your booking request for {selectedCourse.title}.
-                  <strong className="text-accent-700"> Your place is NOT reserved yet.</strong>
-                  To confirm your spot, please complete the following steps in your dashboard:
-                </p>
-                <ul className="list-disc list-inside text-left max-w-md mx-auto mb-8 text-tactical-700 space-y-2">
-                  <li>Submit the <strong className="font-semibold">€1000 deposit</strong>.</li>
-                  <li>Complete your <strong className="font-semibold">User Details Form</strong>.</li>
-                  <li>Upload required <strong className="font-semibold">Documents</strong>.</li>
-                </ul>
+            {step === 3 && isBookingComplete && (() => {
+              const fullSelectedDate = availableDates.find(d => d.id === selectedDate?.id);
 
-                <p className="text-tactical-700 mb-8 max-w-xl mx-auto">
-                  Additionally, please schedule a mandatory introductory meeting with your instructor using the link below.
-                </p>
-                
-                {/* Calendly Link */}
-                <div className="mb-8">
-                  <a
-                    href=""
-                    onClick={(e) => {
-                      e.preventDefault();
-                      (window as any).Calendly.initPopupWidget({url: 'https://calendly.com/rosh-en-ab-d-ulla-h27'});
-                    }}
-                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-600 hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500"
-                  >
-                    Schedule Instructor Meeting (Required)
-                  </a>
-                </div>
+              return (
+                <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Info className="w-10 h-10 text-blue-600" />
+                  </div>
+                  <h1 className="font-heading text-2xl font-bold text-tactical-900 mb-4">
+                    Booking Received - Action Required!
+                  </h1>
+                  <p className="text-tactical-700 mb-6 max-w-xl mx-auto">
+                    Thank you! We've received your booking request for {selectedCourse?.title || 'the selected course'}.
+                    <strong className="text-accent-700"> Your place is NOT reserved yet.</strong>
+                    To confirm your spot, please complete the following steps in your dashboard:
+                  </p>
+                  <ul className="list-disc list-inside text-left max-w-md mx-auto mb-8 text-tactical-700 space-y-2">
+                    <li>Submit the <strong className="font-semibold">€1000 deposit</strong>.</li>
+                    <li>Complete your <strong className="font-semibold">User Details Form</strong>.</li>
+                    <li>Upload required <strong className="font-semibold">Documents</strong>.</li>
+                  </ul>
 
-                <div className="bg-tactical-50 p-6 rounded-lg max-w-md mx-auto mb-8 border border-tactical-200">
-                  <h3 className="font-semibold text-tactical-900 mb-4">Provisional Booking Summary</h3>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-tactical-700">Package:</span>
-                    <span className="font-medium">{selectedCourse.title}</span>
+                  <p className="text-tactical-700 mb-8 max-w-xl mx-auto">
+                    Additionally, please schedule a mandatory introductory meeting with your instructor using the link below.
+                  </p>
+                  
+                  <div className="mb-8">
+                    <a
+                      href=""
+                      onClick={(e) => {
+                        e.preventDefault();
+                        (window as any).Calendly.initPopupWidget({url: 'https://calendly.com/rosh-en-ab-d-ulla-h27'});
+                      }}
+                      className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-600 hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500"
+                    >
+                      Schedule Instructor Meeting (Required)
+                    </a>
                   </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-tactical-700">Dates:</span>
-                    <span className="font-medium">
-                      {selectedDate ? `${formatDateStr(new Date(selectedDate.startDate))} to ${formatDateStr(new Date(selectedDate.endDate))}` : 'N/A'}
-                    </span>
+
+                  <div className="bg-tactical-50 p-6 rounded-lg max-w-md mx-auto mb-8 border border-tactical-200">
+                    <h3 className="font-semibold text-tactical-900 mb-4">Provisional Booking Summary</h3>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-tactical-700">Package:</span>
+                      <span className="font-medium">{selectedCourse?.title || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-tactical-700">Dates:</span>
+                      <span className="font-medium">
+                        {fullSelectedDate ? `${formatDateStr(new Date(fullSelectedDate.start_date))} to ${formatDateStr(new Date(fullSelectedDate.end_date))}` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-tactical-700">Location:</span>
+                      <span className="font-medium">S-Arms Shooting Range, Tallinn</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-tactical-700">Total Amount Due:</span>
+                      <span className="font-bold">{formatCurrency(calculateTotal())}</span>
+                    </div>
+                     <p className="text-xs text-tactical-600 mt-3">*Deposit of €1000 required to confirm.</p>
                   </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-tactical-700">Location:</span>
-                    <span className="font-medium">S-Arms Shooting Range, Tallinn</span>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      Go to Dashboard to Complete Booking
+                    </Button>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-tactical-700">Total Amount Due:</span>
-                    <span className="font-bold">{formatCurrency(calculateTotal())}</span>
-                  </div>
-                   <p className="text-xs text-tactical-600 mt-3">*Deposit of €1000 required to confirm.</p>
                 </div>
-                
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    Go to Dashboard to Complete Booking
-                  </Button>
-                  {/* Removed Print Receipt Button */}
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </main>

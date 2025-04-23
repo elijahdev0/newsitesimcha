@@ -203,11 +203,9 @@ const Dashboard: React.FC = () => {
                     <p className="text-tactical-600 mb-6">
                       Start your tactical journey by booking your first training package.
                     </p>
-                    <Link to="/courses">
-                      <Button variant="primary">
-                        Browse Training Packages
-                      </Button>
-                    </Link>
+                    <Button variant="primary" onClick={() => setIsBookingModalOpen(true)}>
+                      Browse Training Packages
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">

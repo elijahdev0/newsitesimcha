@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ooswtfgykyyatgasdgqz",
+    "organization_id": "qrcoiotgdpzkqaebqyxe",
+    "name": "simchapro@yopmail.com's Project",
+    "region": "us-east-2",
+    "status": "ACTIVE_HEALTHY",
+    "database": {
+      "host": "db.ooswtfgykyyatgasdgqz.supabase.co",
+      "version": "15.8.1.073",
+      "postgres_engine": "15",
+      "release_channel": "ga"
+    },
+    "created_at": "2025-04-21T18:33:45.893346Z"
+  }
+] 
