@@ -17,9 +17,12 @@ import Dashboard from './pages/dashboard/Dashboard.tsx';
 import AdminDashboard from './pages/admin/AdminDashboard.tsx';
 import ManageCourseDates from './pages/admin/ManageCourseDates.tsx';
 import BookingFlow from './pages/booking/BookingFlow.tsx';
+import Privacy from './pages/Privacy.tsx';
+import Terms from './pages/Terms.tsx';
 
 // Common Components
 import WhatsappFAB from './components/common/WhatsappFAB.tsx';
+import { ScrollToTop } from './components/common/ScrollToTop';
 
 // Wrapper component for protected admin routes
 const AdminRoute = () => {
@@ -49,6 +52,7 @@ const AdminRoute = () => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Router>
+      <ScrollToTop />
       <WhatsappFAB />
       <Routes>
         {/* Public Routes */}
@@ -59,6 +63,8 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/book/:courseId" element={<BookingFlow />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         {/* Authenticated User Routes (Example - Dashboard might need auth check) */}
         {/* TODO: Add protected route for dashboard if needed */}

@@ -100,7 +100,11 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="ghost" size="sm" className={cn(buttonTextColor)}> {/* Apply conditional button text color */}
+                  <Button variant="ghost" size="sm" className={cn(
+                    buttonTextColor,
+                    // Custom hover for Dashboard button
+                    "hover:text-accent-600 hover:bg-accent-100"
+                  )}>
                     <UserCircle className="w-4 h-4 mr-2" />
                     Dashboard
                   </Button>

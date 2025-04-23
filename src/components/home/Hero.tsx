@@ -72,16 +72,16 @@ export const Hero: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.8 }}
           >
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">20+</span>
-              <span className="text-white text-sm">Years Special Forces Experience</span>
+              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">5+</span>
+              <span className="text-white text-sm">Specialized Course Tracks</span>
             </div>
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">500+</span>
-              <span className="text-white text-sm">Elite Operators Trained</span>
+              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">50+</span>
+              <span className="text-white text-sm">Practice Drills</span>
             </div>
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
               <span className="text-accent-500 font-heading font-bold text-4xl mb-2">100%</span>
-              <span className="text-white text-sm">Real-World Combat Tested</span>
+              <span className="text-white text-sm">Commitment to Excellence</span>
             </div>
           </motion.div>
         </div>

@@ -1,61 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Users, CalendarPlus } from 'lucide-react';
+import { Download, Users, CalendarPlus, Loader } from 'lucide-react';
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { courses } from '../../data/courses';
 import { supabase } from '../../lib/supabase'; // Import Supabase client
+import { formatDate, formatCurrency } from '../../utils/formatters';
 
-// --- Placeholder Data (Replace with actual data fetching later) ---
-interface UserStatus {
+// Define real user booking type
+interface UserBooking {
   id: string;
+  userId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  filledForms: boolean;
-  paidDeposit: boolean;
-  paidInFull: boolean;
+  courseId: string;
+  courseName: string;
+  totalAmount: number;
+  formsFilled: boolean;
+  paymentStatus: 'pending' | 'deposit_paid' | 'paid' | 'refunded';
   filesUploaded: boolean;
+  documentPath: string | null;
+  createdAt: string;
 }
-
-const dummyUsers: UserStatus[] = [
-  { id: 'usr_1', firstName: 'John', lastName: 'Doe', email: 'john.doe@email.com', phone: '555-1234', filledForms: true, paidDeposit: true, paidInFull: false, filesUploaded: true },
-  { id: 'usr_2', firstName: 'Jane', lastName: 'Smith', email: 'jane.s@email.com', phone: '555-5678', filledForms: true, paidDeposit: false, paidInFull: false, filesUploaded: false },
-  { id: 'usr_3', firstName: 'Bob', lastName: 'Johnson', email: 'bobby.j@email.com', phone: '555-9999', filledForms: false, paidDeposit: false, paidInFull: false, filesUploaded: false },
-];
-// --- End Placeholder Data ---
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
 
-  // State for user statuses (won't persist without backend)
-  const [userStatuses, setUserStatuses] = useState<UserStatus[]>(dummyUsers);
+  // State for real user bookings
+  const [userBookings, setUserBookings] = useState<UserBooking[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
 
   // State for course scheduling
   const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id || '');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [maxParticipants, setMaxParticipants] = useState<number>(10); // Add state for max participants
-  const [isScheduling, setIsScheduling] = useState<boolean>(false); // Add loading state
-  const [scheduleError, setScheduleError] = useState<string | null>(null); // Add error state
-  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null); // Add success state
+  const [maxParticipants, setMaxParticipants] = useState<number>(10);
+  const [isScheduling, setIsScheduling] = useState<boolean>(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
 
-  const handleCheckboxChange = (userId: string, statusKey: keyof Omit<UserStatus, 'id' | 'firstName' | 'lastName' | 'email' | 'phone'>) => {
-    setUserStatuses(prevStatuses =>
-      prevStatuses.map(u =>
-        u.id === userId ? { ...u, [statusKey]: !u[statusKey] } : u
-      )
-    );
-    // TODO: Add backend call to update status
-    console.log(`Status "${statusKey}" changed for user ${userId}`);
+  // Fetch all users with their bookings
+  const fetchUserBookings = useCallback(async () => {
+    setIsLoadingBookings(true);
+    setBookingsError(null);
+    
+    try {
+      // First fetch all bookings with related information
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          user_id,
+          course_id,
+          total_amount,
+          payment_status,
+          forms_filled,
+          files_uploaded,
+          document_path,
+          created_at
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (bookingsError) throw bookingsError;
+      
+      // Fetch user details for all users in the bookings
+      const userIds = [...new Set(bookingsData.map(booking => booking.user_id))];
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email')
+        .in('id', userIds);
+      
+      if (usersError) throw usersError;
+      
+      // Map bookings with user data
+      const formattedBookings: UserBooking[] = bookingsData.map(booking => {
+        const userData = usersData.find(u => u.id === booking.user_id) || 
+                          { first_name: 'Unknown', last_name: 'User', email: 'N/A' };
+        
+        const courseName = courses.find(c => c.id === booking.course_id)?.title || 'Unknown Course';
+        
+        return {
+          id: booking.id,
+          userId: booking.user_id,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          email: userData.email,
+          phone: 'N/A',
+          courseId: booking.course_id,
+          courseName,
+          totalAmount: booking.total_amount,
+          formsFilled: booking.forms_filled || false,
+          paymentStatus: booking.payment_status,
+          filesUploaded: booking.files_uploaded || false,
+          documentPath: booking.document_path,
+          createdAt: booking.created_at
+        };
+      });
+      
+      setUserBookings(formattedBookings);
+    } catch (error: any) {
+      console.error('Error fetching user bookings:', error);
+      setBookingsError(`Failed to load user bookings: ${error.message}`);
+      setUserBookings([]);
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  }, []);
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'admin') {
+      fetchUserBookings();
+    }
+  }, [isAuthenticated, user, fetchUserBookings]);
+
+  const handleDownloadFile = async (documentPath: string, fileName: string) => {
+    try {
+      if (!documentPath) {
+        alert('No document available for download');
+        return;
+      }
+      
+      // Get download URL from Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('docs') // Use your bucket name here
+        .download(documentPath);
+      
+      if (error) throw error;
+      
+      // Create a download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'document';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      console.error('Download error:', error);
+      alert(`Failed to download: ${error.message}`);
+    }
   };
 
-  const handleScheduleCourse = async () => { // Make function async
-    setScheduleError(null); // Clear previous errors/success
+  const handleScheduleCourse = async () => {
+    setScheduleError(null);
     setScheduleSuccess(null);
 
     if (!selectedCourseId || !startDate || !endDate || maxParticipants <= 0) {
@@ -63,55 +161,38 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    setIsScheduling(true); // Set loading state
+    setIsScheduling(true);
 
     try {
-      // Prepare data for Supabase (ensure dates are in ISO format if needed)
-      // Supabase typically handles JS Date objects or ISO strings well
       const newCourseDate = {
         course_id: selectedCourseId,
-        start_date: new Date(startDate).toISOString(), // Ensure ISO format
-        end_date: new Date(endDate).toISOString(),   // Ensure ISO format
+        start_date: new Date(startDate).toISOString(),
+        end_date: new Date(endDate).toISOString(), 
         max_participants: maxParticipants,
-        // current_participants defaults to 0 in the database or via trigger? Assume 0.
       };
 
-      // Perform the insert operation
       const { data, error } = await supabase
         .from('course_dates')
         .insert([newCourseDate])
-        .select(); // Optionally select to confirm insertion
+        .select();
 
       if (error) {
-        console.error("Supabase schedule error:", error);
         throw new Error(error.message || 'Failed to schedule the course date.');
       }
 
       console.log('Course date scheduled successfully:', data);
       setScheduleSuccess(`Successfully scheduled ${courses.find(c => c.id === selectedCourseId)?.title || 'course'} for ${startDate}.`);
 
-      // Optionally reset fields after success
-      // setSelectedCourseId(courses[0]?.id || '');
-      // setStartDate('');
-      // setEndDate('');
-      // setMaxParticipants(10);
-
     } catch (err: any) {
       setScheduleError(err.message || 'An unexpected error occurred.');
     } finally {
-      setIsScheduling(false); // Clear loading state
+      setIsScheduling(false);
     }
-  };
-
-  const handleDownloadFiles = (userId: string) => {
-    // TODO: Add backend call to initiate file download for the user
-    console.log(`Initiating file download for user ${userId}`);
-    alert(`File download initiated for user ${userId}. (Check console)`);
   };
 
   if (!isAuthenticated || user?.role !== 'admin') {
     navigate('/login');
-    return null; // Render nothing while redirecting
+    return null;
   }
 
   return (
@@ -123,67 +204,121 @@ const AdminDashboard: React.FC = () => {
           {/* Admin Header */}
           <div className="bg-tactical-900 text-white rounded-xl p-6 shadow-lg">
             <h1 className="text-2xl font-heading font-bold">Admin Dashboard</h1>
-            <p className="text-gray-300 text-sm">User status overview and course scheduling.</p>
+            <p className="text-gray-300 text-sm">User bookings overview and course scheduling.</p>
           </div>
 
-          {/* Section 1: User Status Management */}
+          {/* Section 1: User Bookings Management */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h2 className="font-heading text-xl font-bold text-tactical-900 mb-4 flex items-center">
               <Users className="w-5 h-5 mr-2 text-accent-500" />
-              User Status Overview
+              User Bookings
             </h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-tactical-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">User</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Contact</th>
-                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Forms</th>
-                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Deposit</th>
-                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Paid Full</th>
-                    <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Files</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {userStatuses.map((u) => (
-                    <tr key={u.id}>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="font-medium text-tactical-900">{u.firstName} {u.lastName}</div>
-                      </td>
-                       <td className="px-4 py-3 whitespace-nowrap text-sm text-tactical-600">
-                         <div>{u.email}</div>
-                         <div>{u.phone}</div>
-                        </td>
-                      <td className="px-2 py-3 text-center">
-                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
-                          checked={u.filledForms} onChange={() => handleCheckboxChange(u.id, 'filledForms')} />
-                      </td>
-                      <td className="px-2 py-3 text-center">
-                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
-                          checked={u.paidDeposit} onChange={() => handleCheckboxChange(u.id, 'paidDeposit')} />
-                      </td>
-                      <td className="px-2 py-3 text-center">
-                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
-                          checked={u.paidInFull} onChange={() => handleCheckboxChange(u.id, 'paidInFull')} />
-                      </td>
-                      <td className="px-2 py-3 text-center">
-                        <input type="checkbox" className="h-4 w-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
-                          checked={u.filesUploaded} onChange={() => handleCheckboxChange(u.id, 'filesUploaded')} />
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {u.filesUploaded && (
-                          <Button variant="ghost" size="sm" onClick={() => handleDownloadFiles(u.id)}>
-                            <Download className="w-4 h-4 mr-1" />
-                            Download Files
-                          </Button>
-                        )}
-                      </td>
+            
+            {/* Error Message */}
+            {bookingsError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong className="font-bold mr-1">Error!</strong>
+                <span className="block sm:inline">{bookingsError}</span>
+              </div>
+            )}
+            
+            {/* Loading Indicator */}
+            {isLoadingBookings && (
+              <div className="flex justify-center items-center py-10">
+                <Loader className="w-8 h-8 animate-spin text-accent-600" />
+                <span className="ml-2 text-tactical-700">Loading bookings...</span>
+              </div>
+            )}
+            
+            {/* Bookings Table */}
+            {!isLoadingBookings && !bookingsError && userBookings.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-tactical-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">User</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Course Info</th>
+                      <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Forms</th>
+                      <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Payment</th>
+                      <th className="px-2 py-2 text-center text-xs font-medium text-tactical-700 uppercase">Files</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-tactical-700 uppercase">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {userBookings.map((booking) => (
+                      <tr key={booking.id}>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-medium text-tactical-900">{booking.firstName} {booking.lastName}</div>
+                          <div className="text-sm text-tactical-600">{booking.email}</div>
+                          <div className="text-sm text-tactical-600">{booking.phone}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">{booking.courseName}</div>
+                          <div className="text-sm text-tactical-600">Booked: {formatDate(booking.createdAt)}</div>
+                          <div className="text-sm font-medium text-tactical-900">Total: {formatCurrency(booking.totalAmount)}</div>
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            booking.formsFilled 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.formsFilled ? 'Completed' : 'Pending'}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            booking.paymentStatus === 'paid' 
+                              ? 'bg-green-100 text-green-800' 
+                              : booking.paymentStatus === 'deposit_paid'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.paymentStatus === 'paid' 
+                              ? 'Paid Full' 
+                              : booking.paymentStatus === 'deposit_paid'
+                              ? 'Deposit Paid'
+                              : 'Pending'}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3 text-center">
+                          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            booking.filesUploaded 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.filesUploaded ? 'Uploaded' : 'Pending'}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          {booking.filesUploaded && booking.documentPath && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDownloadFile(booking.documentPath || '', `${booking.firstName}_${booking.lastName}_doc.pdf`)}
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download Files
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {/* No Bookings Message */}
+            {!isLoadingBookings && !bookingsError && userBookings.length === 0 && (
+              <div className="text-center py-10 bg-tactical-50 rounded-lg">
+                <Users className="w-12 h-12 text-tactical-400 mx-auto mb-4" />
+                <h3 className="font-medium text-tactical-800 mb-2">No bookings found</h3>
+                <p className="text-tactical-600 mb-6">
+                  There are no user bookings in the system yet.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Section 2: Course Date Scheduling */}
@@ -206,7 +341,7 @@ const AdminDashboard: React.FC = () => {
                 <span className="block sm:inline">{scheduleSuccess}</span>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"> {/* Adjusted grid cols */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               {/* Course Dropdown */}
               <div className="md:col-span-2">
                 <label htmlFor="courseSelect" className="block text-sm font-medium text-gray-700 mb-1">
@@ -270,12 +405,12 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Schedule Button */}
-              <div className="md:col-span-5 flex justify-end mt-4"> {/* Adjusted grid span */}
+              <div className="md:col-span-5 flex justify-end mt-4">
                  <Button
                     variant="primary"
                     onClick={handleScheduleCourse}
-                    disabled={isScheduling} // Disable button while scheduling
-                    isLoading={isScheduling} // Show loading state on button
+                    disabled={isScheduling}
+                    isLoading={isScheduling}
                   >
                    {isScheduling ? 'Scheduling...' : 'Schedule Course Date'}
                  </Button>

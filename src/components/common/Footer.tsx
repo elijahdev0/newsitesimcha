@@ -6,8 +6,9 @@ export const Footer: React.FC = () => {
   return (
     <footer className="bg-tactical-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-20 justify-between">
+          {/* Brand & Social */}
+          <div className="mb-8 lg:mb-0 flex-1 min-w-[220px]">
             <div className="flex items-center mb-6">
               <Shield className="w-6 h-6 text-accent-500 mr-2" />
               <span className="text-white font-heading font-semibold text-xl">ELITE TACTICAL</span>
@@ -16,19 +17,20 @@ export const Footer: React.FC = () => {
               Elite tactical training led by Menahem, former Israeli Special Forces. Providing authentic battlefield expertise to military personnel, security teams, and private individuals.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
           </div>
 
-          <div>
+          {/* Training Programs */}
+          <div className="mb-8 lg:mb-0 flex-1 min-w-[180px]">
             <h3 className="text-white font-semibold text-lg mb-6">Training Programs</h3>
             <ul className="space-y-3">
               <li>
@@ -49,28 +51,8 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-white font-semibold text-lg mb-6">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/about" className="text-sm hover:text-white transition-colors">About Us</Link>
-              </li>
-              <li>
-                <Link to="/instructor" className="text-sm hover:text-white transition-colors">Our Instructor</Link>
-              </li>
-              <li>
-                <Link to="/methodology" className="text-sm hover:text-white transition-colors">Our Methodology</Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-sm hover:text-white transition-colors">FAQs</Link>
-              </li>
-              <li>
-                <Link to="/testimonials" className="text-sm hover:text-white transition-colors">Testimonials</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
+          {/* Contact */}
+          <div className="flex-1 min-w-[220px]">
             <h3 className="text-white font-semibold text-lg mb-6">Contact</h3>
             <ul className="space-y-4">
               <li className="flex items-start">
