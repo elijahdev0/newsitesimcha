@@ -1,0 +1,27 @@
+# .nixpacks.toml
+
+[phases.setup]
+# Specify Node.js as the environment
+providers = ["node"]
+# You might want to specify a specific Node version, e.g., node = "18"
+# Check your project's requirements or your package.json "engines" field
+
+[phases.install]
+# Command to install dependencies using npm (adjust if using yarn or pnpm)
+cmds = ["npm install"]
+
+[phases.build]
+# Command to build the Vite project (adjust if different)
+cmds = ["npm run build"]
+
+# The [start] phase tells Nixpacks how to run the application *after* build.
+# For a static Vite site deployed to a platform like Vercel or Netlify,
+# the platform usually serves the output directory directly, so a specific start command
+# might not be strictly necessary or could even interfere.
+# If your platform requires a start command (e.g., to run a simple static server),
+# you might need something like `npx serve dist`.
+# If unsure, start without a [start] phase or use a placeholder.
+# Let's omit it for now, assuming the platform handles serving the 'dist' directory.
+
+# [start]
+# cmd = "npx serve dist" # Example if a start command is needed 
