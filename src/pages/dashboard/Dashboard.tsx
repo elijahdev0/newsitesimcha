@@ -744,7 +744,14 @@ const Dashboard: React.FC = () => {
                                       <li className="flex items-center justify-between min-h-[30px]">
                                         <div className={`flex items-center ${isDepositPaid ? 'text-gray-400' : 'text-tactical-700'}`}>
                                           {isDepositPaid ? <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> : <CreditCard className="w-4 h-4 mr-2 text-tactical-500" />}
-                                          <span className={`text-sm ${isDepositPaid ? 'line-through' : ''}`}>Pay Deposit ({formatCurrency(depositAmount)})</span>
+                                          <span className={`text-sm ${isDepositPaid ? 'line-through' : ''}`}>
+                                            Pay Deposit ({formatCurrency(depositAmount)})
+                                            {!isDepositPaid && (
+                                              <span className="block text-xs text-tactical-600 mt-1">
+                                                To secure your reservation, a deposit of €1,000 is required.
+                                              </span>
+                                            )}
+                                          </span>
                                         </div>
                                         {!isDepositPaid && (
                                           <Button
