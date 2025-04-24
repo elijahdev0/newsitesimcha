@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -10,8 +10,7 @@ export const Footer: React.FC = () => {
           {/* Brand & Social */}
           <div className="mb-8 lg:mb-0 flex-1 min-w-[220px]">
             <div className="flex items-center mb-6">
-              <Shield className="w-6 h-6 text-accent-500 mr-2" />
-              <span className="text-white font-heading font-semibold text-xl">ELITE TACTICAL</span>
+              <img src="https://i.imgur.com/0jZnTpQ.png" alt="Elite Tactical Logo" className="h-14 w-auto md:h-16 lg:h-20 max-h-20" style={{ maxWidth: '180px' }} />
             </div>
             <p className="mb-6 text-sm">
               Elite tactical training led by Menahem, former Israeli Special Forces. Providing authentic battlefield expertise to military personnel, security teams, and private individuals.

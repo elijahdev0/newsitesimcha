@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Shield, LogIn, UserCircle } from 'lucide-react';
+import { Menu, X, LogIn, UserCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from './Button';
 import { cn } from '../../utils/cn';
@@ -65,14 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center" onClick={closeMenu}>
-          <Shield className="w-7 h-7 text-accent-500 mr-2" />
-          <span className={cn(
-              "font-heading font-semibold text-xl",
-              logoTextColor // Apply conditional logo text color
-            )}
-          >
-            ELITE TACTICAL
-          </span>
+          <img src="https://i.imgur.com/0jZnTpQ.png" alt="Elite Tactical Logo" className="h-15 w-auto md:h-17 lg:h-20 max-h-20" style={{ maxWidth: '225px' }} />
         </Link>
 
         {/* Desktop Navigation */}
