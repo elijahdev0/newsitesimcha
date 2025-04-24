@@ -63,9 +63,9 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
         headerBgClass
       )}
     >
-      <div className="container mx-auto px-4 flex items-center justify-between">
+      <div className="container mx-auto px-4 flex items-center justify-between py-2 md:py-3 lg:py-4">
         <Link to="/" className="flex items-center" onClick={closeMenu}>
-          <img src="https://i.imgur.com/0jZnTpQ.png" alt="Elite Tactical Logo" className="h-15 w-auto md:h-17 lg:h-20 max-h-20" style={{ maxWidth: '225px' }} />
+          <img src="https://i.imgur.com/0jZnTpQ.png" alt="Elite Tactical Logo" className="h-10 w-auto md:h-14 lg:h-16 max-h-16" style={{ maxWidth: '140px' }} />
         </Link>
 
         {/* Desktop Navigation */}
