@@ -314,6 +314,11 @@ const Dashboard: React.FC = () => {
           
           // Force re-render by setting a state value if needed
           setIsCreatingCheckoutSession(null); // Ensure button state is reset
+
+          // --- Robust fix: force reload to guarantee UI update ---
+          setTimeout(() => {
+            window.location.reload();
+          }, 4000); // Give user a moment to see the success message
           
         } else {
           // Handle cases where verification succeeded but payment wasn't successful
