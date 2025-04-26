@@ -74,7 +74,7 @@ export const CourseHighlights: React.FC = () => {
                   </ul>
                 </div>
                 
-                <Link to={`/courses/${course.id}`}>
+                <Link to="/courses">
                   <Button variant="primary" fullWidth>
                     View Details
                   </Button>
