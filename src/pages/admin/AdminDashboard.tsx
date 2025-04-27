@@ -579,21 +579,23 @@ const AdminDashboard: React.FC = () => {
         return;
       }
       
+      // Create a signed URL instead of attempting a direct download
       const { data, error } = await supabase.storage
         .from('docs')
-        .download(documentPath);
+        .createSignedUrl(documentPath, 60); // URL valid for 60 seconds
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating signed URL:', error);
+        throw error;
+      }
       
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName || 'document';
-      document.body.appendChild(a);
-      a.click();
+      if (!data?.signedUrl) {
+        throw new Error('Failed to create download URL');
+      }
       
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Open the signed URL in a new tab, which will trigger the download
+      window.open(data.signedUrl, '_blank');
+      
     } catch (error: any) {
       console.error('Download error:', error);
       alert(`Failed to download: ${error.message}`);
