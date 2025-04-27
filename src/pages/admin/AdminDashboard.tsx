@@ -579,13 +579,38 @@ const AdminDashboard: React.FC = () => {
         return;
       }
       
+      console.log('Attempting to download document path:', documentPath);
+      
       // Create a signed URL instead of attempting a direct download
       const { data, error } = await supabase.storage
         .from('docs')
-        .createSignedUrl(documentPath, 60); // URL valid for 60 seconds
+        .createSignedUrl(documentPath, 300); // URL valid for 300 seconds (5 minutes)
       
       if (error) {
         console.error('Error creating signed URL:', error);
+        
+        // If the error is due to object not found, try to fix the path
+        // Sometimes the documentPath might be stored without the 'public/' prefix
+        if (error.message.includes('Object not found') && !documentPath.startsWith('public/')) {
+          console.log('Trying with public/ prefix');
+          const fullPath = `public/${documentPath}`;
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from('docs')
+            .createSignedUrl(fullPath, 300);
+            
+          if (retryError) {
+            console.error('Retry error:', retryError);
+            throw retryError;
+          }
+          
+          if (!retryData?.signedUrl) {
+            throw new Error('Failed to create download URL on retry');
+          }
+          
+          window.open(retryData.signedUrl, '_blank');
+          return;
+        }
+        
         throw error;
       }
       
