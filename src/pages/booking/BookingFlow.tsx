@@ -140,6 +140,7 @@ const BookingFlow: React.FC = () => {
 
     if (selectedCourseDate) {
       console.log("Found matching available date:", selectedCourseDate);
+      console.log("Current participants count:", selectedCourseDate.current_participants);
 
       // Map the Supabase object (snake_case) to the store's expected type (camelCase)
       // Ensure the 'CourseDate' type is correctly defined in src/types/index.ts
