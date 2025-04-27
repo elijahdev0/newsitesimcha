@@ -173,7 +173,10 @@ const BookingFlow: React.FC = () => {
       console.log(`Fetching dates for course UUID: ${courseUuid}`); // Debug log
       const { data, error: fetchError } = await supabase
         .from('course_dates')
-        .select('*')
+        .select(`
+          *,
+          bookings!bookings_course_date_id_fkey(count)
+        `)
         .eq('course_id', courseUuid)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true });
@@ -183,7 +186,14 @@ const BookingFlow: React.FC = () => {
         throw fetchError;
       }
 
-      const available = (data as SupabaseCourseDate[]).filter(
+      // Process data to include the correct participant count
+      const processedData = data?.map(date => ({
+        ...date,
+        current_participants: date.bookings[0]?.count || 0
+      })) || [];
+
+      // Filter dates that still have space available
+      const available = processedData.filter(
         d => d.current_participants < d.max_participants
       );
 
