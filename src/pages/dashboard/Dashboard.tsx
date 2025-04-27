@@ -34,6 +34,11 @@ interface DashboardBooking extends Booking {
   formsFilled?: boolean; // Make optional as it comes from DB
   filesUploaded?: boolean; // Make optional as it comes from DB
   documentPath?: string | null; // Add field for document path
+  courseDate?: {
+    id: string;
+    start_date: string;
+    end_date: string;
+  } | null; // Add course date information
 }
 type BookingDetailsInsert = TablesInsert<'booking_details'>;
 
@@ -107,19 +112,41 @@ const Dashboard: React.FC = () => {
 
     setIsLoadingBookings(true);
     try {
-      const { data, error } = await supabase
+      // First fetch the bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('*') // Select all columns
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase fetch bookings error:', error);
-        throw error;
+      if (bookingsError) {
+        console.error('Supabase fetch bookings error:', bookingsError);
+        throw bookingsError;
+      }
+
+      // If we have bookings, fetch the related course dates
+      const courseDateIds = bookingsData?.map(booking => booking.course_date_id) || [];
+      let courseDatesMap: Record<string, any> = {};
+      
+      if (courseDateIds.length > 0) {
+        const { data: courseDatesData, error: datesError } = await supabase
+          .from('course_dates')
+          .select('id, start_date, end_date, course_id')
+          .in('id', courseDateIds);
+          
+        if (datesError) {
+          console.error('Error fetching course dates:', datesError);
+        } else if (courseDatesData) {
+          // Create a map of course date ID to course date info
+          courseDatesMap = courseDatesData.reduce((acc, date) => {
+            acc[date.id] = date;
+            return acc;
+          }, {} as Record<string, any>);
+        }
       }
 
       // Map Supabase data (snake_case) to component state type (camelCase)
-      const formattedBookings: DashboardBooking[] = (data || []).map((dbBooking: SupabaseBooking) => ({
+      const formattedBookings: DashboardBooking[] = (bookingsData || []).map((dbBooking: SupabaseBooking) => ({
         id: dbBooking.id,
         userId: dbBooking.user_id,
         courseId: dbBooking.course_id,
@@ -132,6 +159,7 @@ const Dashboard: React.FC = () => {
         formsFilled: dbBooking.forms_filled, // Read actual value
         filesUploaded: dbBooking.files_uploaded, // Read actual value
         documentPath: dbBooking.document_path, // Read document path
+        courseDate: courseDatesMap[dbBooking.course_date_id] || null, // Add the course date information
       }));
 
       setBookings(formattedBookings);
@@ -645,8 +673,11 @@ const Dashboard: React.FC = () => {
                               <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Calendar className="w-4 h-4 mr-1.5 text-tactical-500 flex-shrink-0" />
-                                  {/* TODO: Fetch and display actual course date from course_dates table */}
-                                  {booking.createdAt ? `Booked: ${formatDate(booking.createdAt)}` : 'Date TBD'}
+                                  {booking.courseDate ? (
+                                    <span>Course Date: {formatDate(booking.courseDate.start_date)}</span>
+                                  ) : (
+                                    <span>Booked on: {formatDate(booking.createdAt)}</span>
+                                  )}
                                 </div>
                                 <div className="flex items-center text-tactical-600 text-sm">
                                   <Clock className="w-4 h-4 mr-1.5 text-tactical-500 flex-shrink-0" />
