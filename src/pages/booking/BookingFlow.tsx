@@ -29,15 +29,16 @@ interface SupabaseCourse {
   // Add other relevant fields: isPopular, kosherAvailable, etc.
 }
 
-// Supabase types for course_dates
-interface SupabaseCourseDate {
+// This interface represents the raw data from course_dates table
+interface SupabaseCourseDateFromDB {
   id: string;
-  course_id: string; // This should be the UUID from SupabaseCourse.id
+  course_id: string;
   start_date: string;
   end_date: string;
   max_participants: number;
-  current_participants: number;
   created_at: string;
+  // This is NOT a direct column but holds the calculated count
+  current_participants: number; 
 }
 
 const BookingFlow: React.FC = () => {
@@ -48,7 +49,8 @@ const BookingFlow: React.FC = () => {
   const { selectCourse, selectedCourse, selectDate, selectedDate, addExtra, removeExtra, selectedExtras, calculateTotal, createBooking, resetSelection } = useBookingStore();
   
   const [step, setStep] = useState(1);
-  const [availableDates, setAvailableDates] = useState<SupabaseCourseDate[]>([]);
+  // State now holds the processed type which includes the calculated count
+  const [availableDates, setAvailableDates] = useState<SupabaseCourseDateFromDB[]>([]); 
   const [selectedDateObj, setSelectedDateObj] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBookingComplete, setIsBookingComplete] = useState(false);
@@ -128,6 +130,7 @@ const BookingFlow: React.FC = () => {
     console.log("Calendar clicked date:", date);
 
     // Find the corresponding date record more robustly
+    // availableDates already has the calculated current_participants
     const selectedCourseDate = availableDates.find(d => {
       const startDate = new Date(d.start_date);
       // Compare year, month, and day individually
@@ -142,19 +145,21 @@ const BookingFlow: React.FC = () => {
       console.log("Found matching available date:", selectedCourseDate);
       console.log("Current participants count:", selectedCourseDate.current_participants);
 
-      // Map the Supabase object (snake_case) to the store's expected type (camelCase)
-      // Ensure the 'CourseDate' type is correctly defined in src/types/index.ts
+      // Map to the store's expected CourseDate type
+      // The CourseDate type itself no longer has currentParticipants
       const storeReadyDate: CourseDate = {
         id: selectedCourseDate.id,
         courseId: selectedCourseDate.course_id,
         startDate: selectedCourseDate.start_date,
         endDate: selectedCourseDate.end_date,
         maxParticipants: selectedCourseDate.max_participants,
-        currentParticipants: selectedCourseDate.current_participants,
-        // Add/map other fields if your CourseDate type requires them
+        // We pass the calculated count needed by the store logic separately if necessary
+        // OR adjust the store logic if it doesn't strictly need it
+        // For now, we ensure the type matches CourseDate from types/index.ts
       };
       // Pass the correctly typed object to the store
-      selectDate(storeReadyDate);
+      // The calculated count is not needed by the store directly
+      selectDate(storeReadyDate); 
 
     } else {
       // If the selected calendar date doesn't match an available slot,
@@ -172,10 +177,16 @@ const BookingFlow: React.FC = () => {
     setError(null);
     try {
       console.log(`Fetching dates for course UUID: ${courseUuid}`); // Debug log
+      // Fetch the raw data and the booking count
       const { data, error: fetchError } = await supabase
         .from('course_dates')
         .select(`
-          *,
+          id, 
+          course_id, 
+          start_date, 
+          end_date, 
+          max_participants, 
+          created_at,
           bookings!bookings_course_date_id_fkey(count)
         `)
         .eq('course_id', courseUuid)
@@ -188,9 +199,16 @@ const BookingFlow: React.FC = () => {
       }
 
       // Process data to include the correct participant count
-      const processedData = data?.map(date => ({
-        ...date,
-        current_participants: date.bookings[0]?.count || 0
+      // The resulting objects match SupabaseCourseDateFromDB structure
+      const processedData: SupabaseCourseDateFromDB[] = data?.map(date => ({
+        id: date.id,
+        course_id: date.course_id,
+        start_date: date.start_date,
+        end_date: date.end_date,
+        max_participants: date.max_participants,
+        created_at: date.created_at,
+        // Calculate and assign the count here
+        current_participants: date.bookings[0]?.count || 0 
       })) || [];
 
       // Filter dates that still have space available
@@ -642,6 +660,7 @@ const BookingFlow: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-tactical-900 mb-4">Training Details</h3>
                     {selectedDate && (() => {
+                      // Find the full date object from availableDates state, which includes the calculated count
                       const fullSelectedDate = availableDates.find(d => d.id === selectedDate.id);
                       if (!fullSelectedDate) {
                         return (
@@ -653,6 +672,7 @@ const BookingFlow: React.FC = () => {
                           </div>
                         );
                       }
+                      // Use fullSelectedDate.current_participants for calculations/display
                       return (
                         <div className="border border-gray-200 rounded-lg p-6">
                           <div className="mb-4">
