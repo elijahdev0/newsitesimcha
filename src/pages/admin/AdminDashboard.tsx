@@ -242,14 +242,23 @@ const AdminDashboard: React.FC = () => {
       // Limit to 50 dates per course to avoid loading too much data
       const { data, error: fetchError } = await supabase
         .from('course_dates')
-        .select('*')
+        .select(`
+          *,
+          bookings!bookings_course_date_id_fkey(count)
+        `)
         .eq('course_id', courseId)
         .order('start_date', { ascending: true })
         .limit(50);
 
       if (fetchError) throw fetchError;
 
-      setCourseDatesMap(prev => ({ ...prev, [courseId]: data || [] }));
+      // Update current_participants with the count of bookings
+      const processedData = data?.map(date => ({
+        ...date,
+        current_participants: date.bookings[0]?.count || 0
+      })) || [];
+
+      setCourseDatesMap(prev => ({ ...prev, [courseId]: processedData }));
     } catch (err: any) {
       console.error(`Error fetching dates for course ${courseId}:`, err);
       setCourseDatesError(prev => ({ ...prev, [courseId]: `Failed to fetch dates: ${err.message}` }));

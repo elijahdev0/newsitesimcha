@@ -82,7 +82,10 @@ const ManageCourseDates: React.FC = () => {
             
             const { data, error: fetchError, count } = await supabase
                 .from('course_dates')
-                .select('*', { count: 'exact' })
+                .select(`
+                    *,
+                    bookings!bookings_course_date_id_fkey(count)
+                `, { count: 'exact' })
                 .eq('course_id', courseId)
                 .order('start_date', { ascending: true })
                 .range(from, to);
@@ -92,10 +95,16 @@ const ManageCourseDates: React.FC = () => {
             // Set if there are more dates to load
             setHasMoreDates(data && data.length === PAGE_SIZE);
             
-            if (append && data) {
-                setDates(prevDates => [...prevDates, ...data]);
+            // Update current_participants with the count of bookings
+            const processedData = data?.map(date => ({
+                ...date,
+                current_participants: date.bookings[0]?.count || 0
+            })) || [];
+            
+            if (append && processedData) {
+                setDates(prevDates => [...prevDates, ...processedData]);
             } else {
-                setDates(data || []);
+                setDates(processedData);
             }
         } catch (err: any) {
             console.error('Error fetching course dates:', err);
