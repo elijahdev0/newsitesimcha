@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            Led by Menahem, former Israeli Special Forces operator with over two decades of battlefield experience. Master authentic combat skills that work when lives are on the line.
+            Led by Menahem, former Israeli Special Forces operator with over five years of battlefield experience. Master authentic combat skills that work when lives are on the line.
           </motion.p>
           
           <motion.div 
