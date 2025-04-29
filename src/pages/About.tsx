@@ -316,63 +316,53 @@ const About: React.FC = () => {
           </div>
         </section>
 
-        {/* Facility */}
+        {/* Meet Our Team */}
         <section className="py-16 bg-tactical-800">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
+                Meet the Instructors
+              </h2>
+              <p className="text-tactical-300">
+                Our instructor team is made up of professionals from diverse Israeli military and special forces units, each bringing unique tactical knowledge and operational expertise.
+              </p>
+            </div>
+
+            {/* Placeholder for Team Image and Description */}
+            {/* Client will provide the actual image URL */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <img 
-                  src="https://www.ffg-flensburg.de/fileadmin/_processed_/5/8/csm_Headerbild_Guez_1_f2a689d1a4.jpg" 
-                  alt="S-Arms Shooting Range" 
-                  className="rounded-lg shadow-xl"
-                />
+                {/* Team Image */}
+                <div className="relative bg-tactical-700 rounded-lg shadow-xl overflow-hidden h-64 md:h-80">
+                  <img 
+                    src="https://i.imgur.com/5Fu3qkZ.jpeg"
+                    alt="Bald Eagle Tactical Instructor Team"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
               </motion.div>
-
               <motion.div
                 initial={{ opacity: 0, x: 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
+                className="text-tactical-300 space-y-4"
               >
-                <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
-                  Our Training Facility
-                </h2>
-                <p className="text-tactical-300 mb-4">
-                  Located at the S-Arms Shooting Range in Tallinn, Estonia, our training facility provides the perfect environment for tactical development with both indoor and outdoor training areas.
+                <p>
+                  From elite infantry and counterterror units to intelligence and protection services, every member has trained and operated in high-pressure environments — both in Israel and abroad.
                 </p>
-                <p className="text-tactical-300 mb-8">
-                  The facility features multiple shooting ranges, close-quarters battle rooms, tactical obstacle courses, and specialized training environments designed to simulate real-world scenarios.
+                <p>
+                  Together, we combine decades of combat-tested skillsets into one unified force, delivering world-class training that is precise, adaptable, and grounded in real experience.
                 </p>
-
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <span className="text-accent-400 mr-3">✓</span>
-                    <span className="text-tactical-200">Multiple shooting lanes with variable distances</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-accent-400 mr-3">✓</span>
-                    <span className="text-tactical-200">CQB simulation rooms for tactical movement training</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-accent-400 mr-3">✓</span>
-                    <span className="text-tactical-200">Outdoor tactical ranges for dynamic shooting scenarios</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-accent-400 mr-3">✓</span>
-                    <span className="text-tactical-200">Classroom facilities for tactical briefings</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-accent-400 mr-3">✓</span>
-                    <span className="text-tactical-200">Full equipment and firearms available for training</span>
-                  </div>
-                </div>
               </motion.div>
             </div>
+            {/* End Placeholder */}
+
           </div>
         </section>
       </main>
