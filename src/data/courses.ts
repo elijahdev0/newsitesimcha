@@ -94,6 +94,7 @@ export const courses: Course[] = [
     includes: [
       '3 Days focused AR-15 training',
       '600 rounds fired',
+      'Weapons Access: AR-15',
       'Accommodation optional',
       'Meals optional',
       'Insurance optional',
