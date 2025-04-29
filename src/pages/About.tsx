@@ -31,7 +31,7 @@ const About: React.FC = () => {
                 Authentic Tactical Training From The Battlefield
               </h1>
               <p className="text-gray-300 text-lg mb-4">
-                At Elite Tactical Training, we deliver authentic combat expertise based on real-world battlefield experience. Our mission is to provide elite-level tactical training that works when it matters most.
+                At Bald Eagle Tactical , we deliver authentic combat expertise based on real-world battlefield experience. Our mission is to provide elite-level tactical training that works when it matters most.
               </p>
             </motion.div>
           </div>
@@ -115,7 +115,7 @@ const About: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="font-heading text-3xl font-bold text-tactical-100 mb-6">
-                Meet Your Instructor
+                Meet Your Head Instructor
               </h2>
               <p className="text-tactical-300">
                 From the battlefields of Israel to missions deep in Africa, Menahem has dedicated his life to mastering and teaching real-world combat and tactical defense.

@@ -17,8 +17,8 @@ export const Hero: React.FC = () => {
       />
       
       {/* Content */}
-      <div className="container mx-auto px-4 py-20 z-10 relative">
-        <div className="max-w-3xl">
+      <div className="container mx-auto px-4 py-20 pt-36 z-10 relative">
+        <div className="max-w-4xl text-center sm:text-left lg:pl-24">
           <motion.span 
             className="inline-block text-accent-500 font-semibold mb-4 tracking-wider text-sm uppercase"
             initial={{ opacity: 0, y: 20 }}
@@ -47,7 +47,7 @@ export const Hero: React.FC = () => {
           </motion.p>
           
           <motion.div 
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
@@ -66,22 +66,22 @@ export const Hero: React.FC = () => {
           </motion.div>
           
           <motion.div 
-            className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8"
+            className="mt-16 grid grid-cols-3 gap-4 sm:gap-8 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.8 }}
           >
-            <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">5+</span>
-              <span className="text-white text-sm">Specialized Course Tracks</span>
+            <div className="flex flex-col items-center">
+              <span className="text-accent-500 font-heading font-bold text-3xl sm:text-4xl mb-1 sm:mb-2">5+</span>
+              <span className="text-white text-xs sm:text-sm">Specialized Course Tracks</span>
             </div>
-            <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">50+</span>
-              <span className="text-white text-sm">Practice Drills</span>
+            <div className="flex flex-col items-center">
+              <span className="text-accent-500 font-heading font-bold text-3xl sm:text-4xl mb-1 sm:mb-2">50+</span>
+              <span className="text-white text-xs sm:text-sm">Practice Drills</span>
             </div>
-            <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <span className="text-accent-500 font-heading font-bold text-4xl mb-2">100%</span>
-              <span className="text-white text-sm">Commitment to Excellence</span>
+            <div className="flex flex-col items-center">
+              <span className="text-accent-500 font-heading font-bold text-3xl sm:text-4xl mb-1 sm:mb-2">100%</span>
+              <span className="text-white text-xs sm:text-sm">Commitment to Excellence</span>
             </div>
           </motion.div>
         </div>

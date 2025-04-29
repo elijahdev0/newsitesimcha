@@ -32,7 +32,7 @@ export const Instructor: React.FC = () => {
           >
             <div className="flex items-center mb-4">
               <Shield className="w-6 h-6 text-accent-500 mr-2" />
-              <span className="text-accent-500 font-semibold uppercase tracking-wider text-sm">Meet Your Instructor</span>
+              <span className="text-accent-500 font-semibold uppercase tracking-wider text-sm">Meet Your Head Instructor</span>
             </div>
 
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-6">

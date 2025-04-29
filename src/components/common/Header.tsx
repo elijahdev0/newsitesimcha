@@ -65,7 +65,13 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between py-1 md:py-2 lg:py-2">
         <Link to="/" className="flex items-center" onClick={closeMenu}>
-          <img src="https://i.imgur.com/0jZnTpQ.png" alt="Elite Tactical Logo" className="h-10 w-auto md:h-12 lg:h-12 max-h-12" style={{ maxWidth: '120px' }} />
+          <img src="https://i.imgur.com/0jZnTpQ.png" alt="Bald Eagle Tactical Logo" className="h-16 w-auto md:h-20 lg:h-20 max-h-20" style={{ maxWidth: '180px' }} />
+          <span className={cn(
+            'ml-4 font-heading font-bold text-2xl md:text-3xl tracking-wide',
+            logoTextColor
+          )}>
+            Bald Eagle Tactical
+          </span>
         </Link>
 
         {/* Desktop Navigation */}

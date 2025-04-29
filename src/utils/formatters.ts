@@ -1,10 +1,18 @@
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  const options: Intl.NumberFormatOptions = {
     style: 'currency',
     currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  };
+
+  if (amount > 10) {
+    options.minimumFractionDigits = 0;
+    options.maximumFractionDigits = 0;
+  } else {
+    options.minimumFractionDigits = 2;
+    options.maximumFractionDigits = 2;
+  }
+
+  return new Intl.NumberFormat('en-US', options).format(amount);
 };
 
 export const formatDate = (dateString: string): string => {
