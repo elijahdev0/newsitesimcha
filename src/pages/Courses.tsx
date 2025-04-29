@@ -3,8 +3,10 @@ import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { CourseCard } from '../components/courses/CourseCard';
 import CourseComparisonTable from '../components/courses/CourseComparisonTable';
-import { courses } from '../data/courses';
+import { courses, extras } from '../data/courses';
 import { Button } from '../components/common/Button';
+import { formatCurrency } from '../utils/formatters';
+import { Extra } from '../types';
 
 interface CoursesProps {
   showLayout?: boolean; // Default to true
@@ -23,6 +25,37 @@ const Courses: React.FC<CoursesProps> = ({ showLayout = true }) => {
       })
     : courses
   ).slice().sort((a, b) => b.price - a.price);
+
+  // Group extras by category
+  const groupedExtras = extras.reduce((acc, extra) => {
+    const category = extra.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(extra);
+    return acc;
+  }, {} as Record<string, Extra[]>);
+
+  // Define display order and titles for categories
+  const categoryOrder: (keyof typeof groupedExtras)[] = [
+    'experience', 
+    'tactical', 
+    'weapon', 
+    'ammo', 
+    'media', 
+    'hospitality', 
+    'accommodation'
+  ];
+
+  const categoryTitles: Record<string, string> = {
+    experience: 'Experiences',
+    tactical: 'Tactical Add-ons',
+    weapon: 'Weapon Rentals / Sessions',
+    ammo: 'Extra Ammunition',
+    media: 'Media & Merchandise',
+    hospitality: 'Luxury & Hospitality',
+    accommodation: 'Accommodation',
+  };
 
   return (
     <>
@@ -117,93 +150,38 @@ const Courses: React.FC<CoursesProps> = ({ showLayout = true }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Experiences */}
-              <div className="bg-tactical-700 p-8 rounded-lg">
-                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-6">Experiences</h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Helicopter Ride</span>
-                    <span className="font-semibold text-tactical-100">€2,000</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Yacht Cruise</span>
-                    <span className="font-semibold text-tactical-100">€2,000</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Horseback Riding</span>
-                    <span className="font-semibold text-tactical-100">€300</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Spa & Massage (1 session)</span>
-                    <span className="font-semibold text-tactical-100">€300</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Cigar Lounge (3 cigars + whiskey)</span>
-                    <span className="font-semibold text-tactical-100">€400</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Tactical Add-ons */}
-              <div className="bg-tactical-700 p-8 rounded-lg">
-                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-6">Tactical Add-ons</h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Night Shooting</span>
-                    <span className="font-semibold text-tactical-100">€250</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Rifle Handling & Reloads</span>
-                    <span className="font-semibold text-tactical-100">€250</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Pistol Handling & Malfunctions</span>
-                    <span className="font-semibold text-tactical-100">€250</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Krav Maga (Disarms & Weapon Retention)</span>
-                    <span className="font-semibold text-tactical-100">€300</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">CQB Fundamentals</span>
-                    <span className="font-semibold text-tactical-100">€300</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Media & Merch */}
-              <div className="bg-tactical-700 p-8 rounded-lg">
-                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-6">Media & Merchandise</h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Media Package (Photo/Video)</span>
-                    <span className="font-semibold text-tactical-100">€500</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Tactical Merch Kit (Knife, Patch, AAR)</span>
-                    <span className="font-semibold text-tactical-100">€300</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Accommodation */}
-              <div className="bg-tactical-700 p-8 rounded-lg">
-                <h3 className="font-heading text-xl font-bold text-tactical-100 mb-6">Accommodation & Transport</h3>
-                <ul className="space-y-4">
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Hotel Upgrade: Telegraaf (per night)</span>
-                    <span className="font-semibold text-tactical-100">€500</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">Hotel Standard: Hestia (per night)</span>
-                    <span className="font-semibold text-tactical-100">€180</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-tactical-200">VIP Car Service (per day)</span>
-                    <span className="font-semibold text-tactical-100">€450</span>
-                  </li>
-                </ul>
-              </div>
+              {/* Dynamically render categories based on defined order */}
+              {categoryOrder.map(categoryKey => {
+                const items = groupedExtras[categoryKey];
+                // Only render the category if it exists in the data and has items
+                if (items && items.length > 0) {
+                  return (
+                    <div key={categoryKey} className="bg-tactical-700 p-8 rounded-lg">
+                      <h3 className="font-heading text-xl font-bold text-tactical-100 mb-6">
+                        {categoryTitles[categoryKey] || categoryKey} {/* Fallback to key if title missing */}
+                      </h3>
+                      <ul className="space-y-4">
+                        {items.map(extra => (
+                          <li key={extra.id} className="border-b border-tactical-600 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="text-tactical-100 mr-2 font-medium">{extra.name}</span>
+                              <span className="font-semibold text-accent-400 text-right flex-shrink-0">
+                                {formatCurrency(extra.price)}
+                                {categoryKey === 'ammo' && ' / round'} 
+                                {(categoryKey === 'weapon' || categoryKey === 'accommodation' || extra.name.toLowerCase().includes('(per day)') || extra.name.toLowerCase().includes('(per night)')) && ' / day'}
+                              </span>
+                            </div>
+                            {extra.description && (
+                              <p className="text-tactical-300 text-sm">{extra.description}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                return null; // Don't render anything if category is empty or not found
+              })}
             </div>
           </div>
         </section>

@@ -122,26 +122,70 @@ const About: React.FC = () => {
               </p>
             </div>
 
-            <div className="bg-tactical-700 rounded-xl shadow-xl overflow-hidden max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto">
+            <div className="bg-tactical-700 rounded-xl shadow-xl overflow-hidden max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="h-64 lg:h-auto">
                   <img 
                     src="https://i.imgur.com/nRmngdh.jpeg" 
                     alt="Instructor Menahem" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-8">
-                  <h3 className="font-heading text-2xl font-bold text-tactical-100 mb-4">Menahem</h3>
+                <div className="p-8 flex flex-col justify-center">
+                  <h3 className="font-heading text-2xl font-bold text-tactical-100 mb-2">Menahem</h3>
                   <p className="text-accent-400 font-medium mb-4">Israeli Special Forces Veteran | Combat Instructor | Global Security Expert</p>
                   
-                  <p className="text-tactical-300 mb-6">
-                    With over five years of experience as a Commander in Israeli Special Forces and extensive work across Africa in high-risk environments, Menahem brings a rare combination of elite military training and authentic operational experience to every session.
-                  </p>
-                  
-                  <p className="text-tactical-300">
-                    Specializing in close-quarters combat, firearms proficiency, threat assessment, and executive protection, Menahem's instruction is built on lessons forged in the field — not in a classroom.
-                  </p>
+                  <div className="mb-6 space-y-4 text-tactical-300">
+                    <p>
+                      From the battlefields of Israel to missions deep in Africa, Menahem has dedicated his life to mastering and teaching real-world combat and tactical defense.
+                    </p>
+                    <p>
+                      With over five years of experience as a Commander in Israeli Special Forces and extensive work across Africa in high-risk environments, Menahem brings a rare combination of elite military training and authentic operational experience to every session.
+                    </p>                  
+                    <p>
+                      Specializing in close-quarters combat, firearms proficiency, threat assessment, and executive protection, Menahem's instruction is built on lessons forged in the field — not in a classroom.
+                    </p>
+                    <p className="text-tactical-200 italic pt-2">
+                      At Bald Eagle Tactical, Menahem's mission is clear: To pass on battle-tested skills that save lives — skills sharpened through years of real-world missions, tactical operations, and front-line leadership.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6 mt-4">
+                    <div>
+                      <h4 className="font-semibold text-tactical-100 mb-3 border-b border-tactical-600 pb-1">Background</h4>
+                      <ul className="space-y-2 list-disc list-inside text-tactical-300 text-sm">
+                        <li><span className="font-medium text-tactical-200">Israeli Special Forces Veteran:</span> 5+ years in special operations, including counter-terrorism and high-risk missions.</li>
+                        <li><span className="font-medium text-tactical-200">Global Security Operative:</span> Real-world operational experience across Africa, specializing in protection, tactical training, and security consulting.</li>
+                        <li><span className="font-medium text-tactical-200">Instructor of Elite Teams:</span> Trained military units, security teams, and civilians around the world.</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-tactical-100 mb-3 border-b border-tactical-600 pb-1">What You Can Expect</h4>
+                      <ul className="space-y-3 text-tactical-300 text-sm">
+                        <li>
+                          <strong className="block text-tactical-200">Combat-Proven Methodology:</strong>
+                          Training built on real missions, where precision and survival were non-negotiable.
+                        </li>
+                        <li>
+                          <strong className="block text-tactical-200">Advanced Tactical Certifications:</strong>
+                          Expertise in counter-terrorism, executive protection, advanced firearms, and threat mitigation.
+                        </li>
+                        <li>
+                          <strong className="block text-tactical-200">Personalized, Real-World Instruction:</strong>
+                          Whether you're preparing for a hostile environment or seeking elite-level self-defense skills, every session is tailored to meet real-world threats — not just theoretical training.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <blockquote className="mt-4 p-4 border-l-4 border-accent-400 bg-tactical-800 rounded-r-lg">
+                    <p className="text-tactical-200 italic mb-2">
+                      "My mission is to pass on the hard-earned lessons of the battlefield — to train warriors, protectors, and those who refuse to be victims. Tactics that work when it matters most — not just on the training ground, but when life is truly on the line."
+                    </p>
+                    <footer className="text-accent-400 text-right">— Menahem</footer>
+                  </blockquote>
+
                 </div>
               </div>
             </div>

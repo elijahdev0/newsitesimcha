@@ -39,26 +39,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </div>
 
         <ul className="space-y-3 mb-6 text-sm flex-grow">
-          <li className="flex items-center">
-            <span className="text-green-400 mr-2"><Check size={16} /></span>
-            <span className="text-tactical-300">{course.duration} Days Training</span>
-          </li>
-          <li className="flex items-center">
-            <span className="text-green-400 mr-2"><Check size={16} /></span>
-            <span className="text-tactical-300">{course.rounds} Rounds Included</span>
-          </li>
-          <li className="flex items-center">
-            <span className="text-green-400 mr-2"><Check size={16} /></span>
-            <span className="text-tactical-300">
-              {course.hotel ? `Accommodation: ${course.hotel}` : 'Accommodation Not Included'}
-            </span>
-          </li>
-          <li className="flex items-center">
-            <span className="text-green-400 mr-2"><Check size={16} /></span>
-            <span className="text-tactical-300">
-              {course.transport ? `Transport: ${course.transport}` : 'Transport Not Included'}
-            </span>
-          </li>
+          {course.includes.slice(0, 5).map((item, index) => (
+            <li key={index} className="flex items-start">
+              <span className="text-green-400 mr-2 pt-0.5 shrink-0"><Check size={16} /></span>
+              <span className="text-tactical-300">{item}</span>
+            </li>
+          ))}
+          {course.includes.length > 5 && (
+             <li className="flex items-start">
+               <span className="text-tactical-400 mr-2 pt-0.5 shrink-0"><ArrowRight size={16} /></span>
+               <span className="text-tactical-400 italic">...and more</span>
+             </li>
+          )}
         </ul>
       </div>
       
