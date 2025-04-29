@@ -8,26 +8,77 @@ interface CourseComparisonTableProps {
   courses: Course[];
 }
 
+// Helper function to extract weapon system count or details
+const getWeaponDetails = (includes: string[]): string => {
+  const weaponLine = includes.find(line => line.toLowerCase().startsWith('weapons access:'));
+  if (weaponLine) {
+    return weaponLine.replace(/weapons access:/i, '').trim();
+  }
+  return '-'; // Or indicate not specified
+};
+
+// Helper function to check for specific features
+const checkFeature = (includes: string[], keywords: string | string[]) => {
+  const searchTerms = Array.isArray(keywords) ? keywords : [keywords];
+  return searchTerms.some(term => 
+    includes.some(inc => inc.toLowerCase().includes(term.toLowerCase()))
+  );
+};
+
 const CourseComparisonTable: React.FC<CourseComparisonTableProps> = ({ courses }) => {
-  // Define the features to compare
+  // Define the features to compare based on PDF data
   const features = [
     { key: 'price', label: 'Price', format: (val: number) => formatCurrency(val) },
     { key: 'duration', label: 'Duration (Days)' },
-    { key: 'rounds', label: 'Rounds Included' },
-    { key: 'instructor', label: 'Instructor Type', checkIncludes: ['Private instructor', 'Group instruction'] },
+    { key: 'rounds', label: 'Rounds Fired' },
+    { 
+      key: 'weapon_systems', 
+      label: 'Weapon Systems', 
+      getValue: (course: Course) => getWeaponDetails(course.includes)
+    },
+    { 
+      key: 'krav_maga', 
+      label: 'Krav Maga', 
+      checkIncludes: ['Krav Maga combat sessions', 'Krav Maga tactical sessions', 'Krav Maga defensive tactics', 'Krav Maga crash course'] 
+    },
+    { 
+      key: 'combat_first_aid', 
+      label: 'Combat First Aid', 
+      checkIncludes: ['Full Combat First Aid course', 'Combat First Aid fundamentals', 'Combat First Aid crash course']
+    },
+    { key: 'helicopter', label: 'Helicopter Ride', checkIncludes: 'helicopter experience' },
+    { key: 'yacht', label: 'Yacht Cruise', checkIncludes: 'yacht cruise' },
+    { key: 'horseback', label: 'Horseback Riding', checkIncludes: 'Horseback riding session' },
+    { key: 'spa', label: 'Spa/Recovery', checkIncludes: 'Full spa and recovery day' }, // Specific to Black Talon
+    { key: 'cigar_lounge', label: 'Cigar Lounge', checkIncludes: 'cigar lounge evening' },
+    { key: 'drone_ops', label: 'Drone Ops', checkIncludes: 'Drone tactical operations' }, // Specific to Black Talon
     { key: 'hotel', label: 'Accommodation' },
     { key: 'transport', label: 'Transport' },
-    { key: 'meals', label: 'Meals', checkIncludes: ['All meals', '3 high-quality meals/day', 'Daily meals'] },
-    { key: 'kosherAvailable', label: 'Kosher Meals Available' },
-    { key: 'private_helicopter', label: 'Private Helicopter', checkIncludes: 'Private helicopter ride' },
-    { key: 'yacht_cruise', label: 'Yacht Cruise', checkIncludes: 'Yacht cruise' },
-    { key: 'horseback_riding', label: 'Horseback Riding', checkIncludes: 'Horseback riding' },
-    { key: 'cigar_lounge', label: 'Cigar Lounge', checkIncludes: 'Cigar lounge' },
-    { key: 'media_package', label: 'Media Package', checkIncludes: 'Media package' },
-    { key: 'merch_kit', label: 'Merch Kit', checkIncludes: ['Tactical merch kit', 'Small tactical merch item'] },
-    { key: 'night_shooting', label: 'Night Shooting Included', checkIncludes: 'night shooting' },
-    { key: 'drone_ops', label: 'Drone Ops Course', checkIncludes: 'drone operations' },
-    { key: 'certificate', label: 'Certificate', checkIncludes: 'Certificate of Tactical Excellence' },
+    { 
+      key: 'meals', 
+      label: 'Kosher Meals Included',
+      getValue: (course: Course) => {
+        return course.kosherAvailable 
+               ? <Check className="w-5 h-5 text-green-400 mx-auto" /> 
+               : <X className="w-5 h-5 text-red-400 mx-auto" />;
+      }
+    },
+    { key: 'insurance', label: 'Insurance', checkIncludes: 'Full insurance coverage' },
+    { key: 'media_package', label: 'Media Package (Photo/Video)', checkIncludes: 'Professional media package' },
+    { 
+      key: 'merch_kit', 
+      label: 'Merch Kit', 
+      getValue: (course: Course) => {
+        if (checkFeature(course.includes, 'Premium tactical merchandise pack')) {
+          return 'Premium Kit';
+        }
+        // Based on current data, only Black Talon has merch explicitly listed.
+        // Add checks here if Warrior/Combat merch data is re-introduced later.
+        return '-'; // Default if no specific merch is found
+      }
+    },
+    { key: 'concierge', label: 'VIP Concierge', checkIncludes: 'VIP concierge service' }, // Specific to Black Talon
+    { key: 'certificate', label: 'Certificate', checkIncludes: 'CERTIFICATE OF COMPLETION' },
   ];
 
   return (
@@ -53,39 +104,70 @@ const CourseComparisonTable: React.FC<CourseComparisonTableProps> = ({ courses }
         <tbody>
           {features.map((feature, index) => (
             <tr key={feature.key} className={cn("border-b border-tactical-700", index % 2 === 0 ? 'bg-tactical-800' : 'bg-tactical-700/50')}>
-              <td className="p-4 font-medium text-tactical-200 text-sm w-1/6">{feature.label}</td>
+              <td className="p-4 font-medium text-tactical-200 text-sm align-top w-1/6">{feature.label}</td>
               {courses.map(course => {
-                let value: any = (course as any)[feature.key];
+                let value: any;
                 
-                // Handle specific include checks or direct boolean
-                if (feature.checkIncludes) {
-                  let included = false;
-                  if (Array.isArray(feature.checkIncludes)) {
-                    // Check if any of the keywords are present
-                    included = feature.checkIncludes.some(keyword => 
-                      course.includes.some(inc => inc.toLowerCase().includes(keyword.toLowerCase()))
-                    );
-                  } else {
-                    // Check if the single keyword is present (feature.checkIncludes must be a string here)
-                    const keyword = feature.checkIncludes; // Explicitly treat as string
-                    included = course.includes.some(inc => 
-                      inc.toLowerCase().includes(keyword.toLowerCase())
-                    );
+                // Prioritize custom getValue function if present
+                if (feature.getValue) {
+                  value = feature.getValue(course);
+                } 
+                // Handle checks based on keywords in 'includes' array
+                else if (feature.checkIncludes) {
+                  const included = checkFeature(course.includes, feature.checkIncludes);
+                  // Render check/cross for boolean results from checkFeature unless getValue already returned JSX
+                  if (typeof value !== 'object') { // Avoid double-wrapping if getValue returned JSX
+                     value = included ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
+                  } else if (!value) {
+                     // Handle cases where getValue might return null/undefined but checkIncludes exists (shouldn't happen with current structure)
+                     value = included ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
                   }
-                  value = included ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
-                } else if (feature.key === 'kosherAvailable') {
-                  value = course.kosherAvailable ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
-                } else if (feature.format) {
-                  value = feature.format(value);
-                } else if (!value && (feature.key === 'hotel' || feature.key === 'transport')) {
-                  value = <span className="text-tactical-500 italic">Not Included</span>;
-                } else if (typeof value === 'boolean') { // Keep generic boolean check just in case
-                  value = value ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
+                }
+                // Handle direct property access
+                else {
+                  value = (course as any)[feature.key];
+                  if (feature.format) {
+                    value = feature.format(value);
+                  } else if (value === undefined || value === null || value === '') {
+                      // Specific handling for optional text fields like hotel/transport
+                      if (feature.key === 'hotel' || feature.key === 'transport') {
+                          // Check if 'includes' mention optionality for Iron Sight
+                          if (course.title === 'Iron Sight' && (feature.key === 'hotel' || feature.key === 'transport') && checkFeature(course.includes, 'optional')) {
+                              value = <span className="text-tactical-500 italic">Optional</span>;
+                          } else {
+                              value = <span className="text-tactical-500 italic">Not Included</span>; 
+                          } 
+                      } else {
+                          // Default for other potentially missing direct keys
+                          value = '-';
+                      }
+                  } else if (typeof value === 'boolean') { // Generic boolean fallback (e.g., isPopular, though not used in table now)
+                      value = value ? <Check className="w-5 h-5 text-green-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />;
+                  }
+                }
+
+                // Special case for Iron Sight 'optional' text fields
+                if (course.title === 'Iron Sight' && (feature.key === 'hotel' || feature.key === 'meals' || feature.key === 'insurance')){
+                   if (checkFeature(course.includes, 'optional')) {
+                     value = <span className="text-tactical-500 italic">Optional</span>;
+                   } else if (!checkFeature(course.includes, 'optional') && !value) {
+                       // If not optional and no value provided by other means
+                       value = <X className="w-5 h-5 text-red-400 mx-auto" />;
+                   }
+                }
+                
+                // Ensure Hotel/Transport display text if provided directly
+                if ((feature.key === 'hotel' || feature.key === 'transport') && typeof (course as any)[feature.key] === 'string' && (course as any)[feature.key]) {
+                    value = (course as any)[feature.key];
                 }
 
                 return (
-                  <td key={`${course.id}-${feature.key}`} className="p-4 text-center text-sm text-tactical-300 w-1/6">
-                    {value}
+                  <td key={`${course.id}-${feature.key}`} className="p-4 text-center text-xs align-top text-tactical-300 w-1/6">
+                    {/* Wrap text values for better readability */} 
+                    {(typeof value === 'string' && value.length > 20) ? 
+                        <span className="block whitespace-normal">{value}</span> : 
+                        value
+                    }
                   </td>
                 );
               })}

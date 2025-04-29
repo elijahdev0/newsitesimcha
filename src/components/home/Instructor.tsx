@@ -36,43 +36,47 @@ export const Instructor: React.FC = () => {
             </div>
 
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-6">
-              Menahem, Former Israeli Special Forces Commander
+              Menahem — Israeli Special Forces Veteran | Combat Instructor | Global Security Expert
             </h2>
 
             <p className="text-gray-300 mb-6">
-              With over five years of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
+              From the battlefields of Israel to missions deep in Africa, Menahem has dedicated his life to mastering and teaching real-world combat and tactical defense.
+            </p>
+
+            <p className="text-gray-300 mb-6">
+              With over five years of experience as a Commander in Israeli Special Forces and extensive work across Africa in high-risk environments, Menahem brings a rare combination of elite military training and authentic operational experience to every session.
             </p>
 
             <p className="text-gray-300 mb-8">
-              Specializing in close-quarters combat, firearms training, and threat assessment, Menahem brings authentic battlefield expertise to every session, ensuring you receive real-world skills that can save lives.
+              Specializing in close-quarters combat, firearms proficiency, threat assessment, and executive protection, Menahem's instruction is built on lessons forged in the field — not in a classroom.
             </p>
 
             <div className="space-y-4 mb-8">
               <div className="flex items-start">
                 <Medal className="text-accent-500 w-5 h-5 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white">Elite Military Background</h4>
-                  <p className="text-gray-400 text-sm">5+ years in special operations and high-risk missions</p>
+                  <h4 className="font-semibold text-white">Elite Military Leadership</h4>
+                  <p className="text-gray-400 text-sm">Commander in Israeli Special Forces with extensive operational experience</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="text-accent-500 w-5 h-5 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white">Combat-Proven Methodology</h4>
-                  <p className="text-gray-400 text-sm">Training philosophy combining military precision with practical application</p>
+                  <h4 className="font-semibold text-white">Global Security Operations</h4>
+                  <p className="text-gray-400 text-sm">Field-tested expertise across high-risk environments in Africa</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <Shield className="text-accent-500 w-5 h-5 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white">Advanced Certifications</h4>
-                  <p className="text-gray-400 text-sm">Specialized in counter-terrorism, executive protection, and advanced weapons handling</p>
+                  <h4 className="font-semibold text-white">Battle-Tested Training</h4>
+                  <p className="text-gray-400 text-sm">Real-world tactical skills refined through front-line operations</p>
                 </div>
               </div>
             </div>
 
             <blockquote className="italic text-gray-300 border-l-4 border-accent-500 pl-4 mb-4">
-              "My mission is to bring authentic combat expertise to those committed to mastering tactical skills that work in real-world situations, not just on the training ground."
+              "At Bald Eagle Tactical, my mission is clear: To pass on battle-tested skills that save lives — skills sharpened through years of real-world missions, tactical operations, and front-line leadership."
             </blockquote>
             <p className="text-accent-500 font-semibold">— Menahem</p>
           </motion.div>

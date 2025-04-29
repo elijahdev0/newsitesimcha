@@ -52,6 +52,6 @@ export type Extra = {
   id: string;
   name: string;
   price: number;
-  category: 'experience' | 'tactical' | 'media' | 'accommodation' | 'transport' | 'ammo';
+  category: 'experience' | 'tactical' | 'media' | 'accommodation' | 'transport' | 'ammo' | 'weapon' | 'hospitality';
   description?: string;
 };

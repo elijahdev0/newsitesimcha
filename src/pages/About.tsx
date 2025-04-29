@@ -118,7 +118,7 @@ const About: React.FC = () => {
                 Meet Your Instructor
               </h2>
               <p className="text-tactical-300">
-                With over two decades of experience in Israeli Special Forces, Menahem has trained elite military personnel, security teams, and private individuals in tactical combat and defense strategies.
+                From the battlefields of Israel to missions deep in Africa, Menahem has dedicated his life to mastering and teaching real-world combat and tactical defense.
               </p>
             </div>
 
@@ -133,14 +133,14 @@ const About: React.FC = () => {
                 </div>
                 <div className="p-8">
                   <h3 className="font-heading text-2xl font-bold text-tactical-100 mb-4">Menahem</h3>
-                  <p className="text-accent-400 font-medium mb-4">Former Israeli Special Forces Commander</p>
+                  <p className="text-accent-400 font-medium mb-4">Israeli Special Forces Veteran | Combat Instructor | Global Security Expert</p>
                   
                   <p className="text-tactical-300 mb-6">
-                    Specializing in close-quarters combat, firearms training, and threat assessment, Menahem brings authentic battlefield expertise to every session, ensuring you receive real-world skills that can save lives.
+                    With over five years of experience as a Commander in Israeli Special Forces and extensive work across Africa in high-risk environments, Menahem brings a rare combination of elite military training and authentic operational experience to every session.
                   </p>
                   
                   <p className="text-tactical-300">
-                    His training philosophy combines military precision with practical application, making advanced tactical skills accessible to anyone committed to learning.
+                    Specializing in close-quarters combat, firearms proficiency, threat assessment, and executive protection, Menahem's instruction is built on lessons forged in the field — not in a classroom.
                   </p>
                 </div>
               </div>
