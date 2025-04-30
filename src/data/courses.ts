@@ -202,42 +202,42 @@ export const extras: Extra[] = [
 
   // Weapons Expansion Menu
   {
-    id: 'wep-scar-rental',
+    id: '72ef2c01-1f9c-4bd9-9c06-27cd2ef1b241',
     name: 'SCAR Rifle Rental (per day)',
     price: 120,
     category: 'weapon',
     description: 'Rent a SCAR rifle for your training day.'
   },
   {
-    id: 'wep-sniper-rental',
+    id: '83ef3d12-2f9d-4cd0-0d17-38de3ef2c352',
     name: 'Precision Sniper Rifle Rental (per day)',
     price: 150,
     category: 'weapon',
     description: 'Rent a precision sniper rifle for your training day.'
   },
   {
-    id: 'wep-ak47-session',
+    id: '94ef4e23-3f0e-4de1-9e28-49ef4ef3d463',
     name: 'AK-47 Additional Session (per day)',
     price: 100,
     category: 'weapon',
     description: 'Add an extra session focused on the AK-47 platform.'
   },
   {
-    id: 'wep-revolver-exp',
+    id: '05ef5f34-4f1f-4ef2-9f39-50fd5ef4e574',
     name: 'Revolver Pistol Experience (per day)',
     price: 80,
     category: 'weapon',
     description: 'Gain experience handling and shooting revolvers.'
   },
   {
-    id: 'wep-tacpistol-rental',
+    id: '16ef6f45-5f2f-4ff3-af40-61fe6ef5f685',
     name: 'Tactical Pistols (CZ, SIG) Rental (per day)',
     price: 90,
     category: 'weapon',
     description: 'Rent tactical pistols like CZ or SIG models.'
   },
   {
-    id: 'wep-shotgun-session',
+    id: '27ef7f56-6f3f-4ff4-bf51-72ff7ef6f796',
     name: 'Shotgun Session (per day)',
     price: 90,
     category: 'weapon',
@@ -262,21 +262,21 @@ export const extras: Extra[] = [
 
   // Luxury Hospitality Enhancements
   {
-    id: 'hosp-chef-dining',
+    id: '38ef8f67-7f4f-4ff5-bf62-83af8ef7f807',
     name: 'Private Chef Fine Dining Experience',
     price: 600,
     category: 'hospitality',
     description: 'Enjoy a fine dining experience prepared by a private chef. Minimum 2 participants.'
   },
   {
-    id: 'hosp-wine-tasting',
+    id: '49ef9f78-8f5f-4ff6-cf73-94af9ef8f918',
     name: 'Wine Tasting Premium Evening',
     price: 300,
     category: 'hospitality',
     description: 'Participate in a premium wine tasting evening. Minimum 2 participants.'
   },
   {
-    id: 'hosp-full-meal-plan',
+    id: '50ef0f89-9f6f-4ff7-df84-05af0ef9f029',
     name: 'Full Gourmet Meal Plan',
     price: 1200,
     category: 'hospitality',
@@ -290,21 +290,21 @@ export const extras: Extra[] = [
     description: 'Upgrade your stay to the luxurious Telegraaf Presidential/Executive Suite.'
   },
   {
-    id: 'hosp-vip-transport',
+    id: '61ef1f90-0f7f-4ff8-ef95-16af1ef0f130',
     name: 'VIP Transport (Chauffeur Luxury Vehicle per day)',
     price: 450,
     category: 'hospitality',
     description: 'Utilize a private luxury vehicle with a chauffeur.'
   },
   {
-    id: 'hosp-std-hotel-night',
+    id: '72ef2f01-1f8f-4ff9-ff06-27af2ef1f241',
     name: 'Standard Hotel Night (Hestia Strand per night)',
     price: 180,
     category: 'accommodation',
     description: 'Add extra nights at the standard Hestia Hotel Strand.'
   },
   {
-    id: 'hosp-vip-concierge',
+    id: '83ef3f12-2f9f-4ff0-0f17-38af3ef2f352',
     name: 'Full Stay Personal VIP Concierge Assistance',
     price: 500,
     category: 'hospitality',
@@ -320,7 +320,7 @@ export const extras: Extra[] = [
     description: 'Additional 9mm ammunition for extended practice sessions.'
   },
   {
-    id: 'ammo-556',
+    id: '94ef4f23-3f0f-4ff1-1f28-49af4ef3f463',
     name: 'Extra 5.56mm (AR-15) Ammo (per round)',
     price: 1.00,
     category: 'ammo',
@@ -334,7 +334,7 @@ export const extras: Extra[] = [
     description: 'Additional 7.62x39mm ammunition for AK platforms.'
   },
   {
-    id: 'ammo-22lr',
+    id: '05ef5f34-4f1f-4ff2-2f39-50af5ef4f574',
     name: 'Extra .22LR Ammo (per round)',
     price: 0.25,
     category: 'ammo',
