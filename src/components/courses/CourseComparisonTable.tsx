@@ -110,26 +110,35 @@ const CourseComparisonTable: React.FC<CourseComparisonTableProps> = ({ courses }
         }
         break;
       case 'meals':
-        let mealText = '';
-        let isKosher = course.kosherAvailable ? <Check className="w-4 h-4 text-green-400 inline-block ml-1" /> : null; // Use smaller icon for inline
+        let mealText = 'Not Included'; // Default value
+        let isKosher = course.kosherAvailable ? <Check className="w-4 h-4 text-green-400 inline-block ml-1" /> : null;
 
-        if (checkFeature(course.includes, featureKeywords.optional)) {
+        // Check for specific known meal strings first
+        if (course.includes.some(inc => inc.toLowerCase() === 'meals optional')) {
             mealText = 'Optional';
-        } else if (checkFeature(course.includes, featureKeywords.meals_gourmet)) {
-            mealText = 'Gourmet Fine Dining';
-        } else if (checkFeature(course.includes, featureKeywords.meals_standard)) {
-            mealText = 'Standard Included';
-        } else if (checkFeature(course.includes, featureKeywords.meals_included_generic)) {
-            // Fallback if general meal words are present but not specific types
-            mealText = 'Standard Included';
-        } else {
-            mealText = 'Not Included'; // If no meal keywords found
+        } else if (course.includes.some(inc => inc === 'Gourmet breakfasts and luxury dinners')) {
+            mealText = 'Gourmet breakfasts and luxury dinners';
+        } else if (course.includes.some(inc => inc === 'Gourmet meals included')) {
+            mealText = 'Gourmet meals included';
+        } else if (course.includes.some(inc => inc === 'Buffet-style dining included')) {
+            mealText = 'Buffet-style dining included';
+        } else if (course.includes.some(inc => inc === 'Buffet-style meals included')) {
+            mealText = 'Buffet-style meals included';
+        }
+        // If no specific known string matched, try the regex as a fallback (shouldn't be needed with current data)
+        else {
+            const mealLine = course.includes.find(inc =>
+              /\b(meal|meals|dining|breakfast|dinner)\b/i.test(inc)
+            );
+             if (mealLine) {
+                mealText = mealLine;
+             }
         }
 
+        // Render based on the determined mealText
         if (mealText === 'Optional' || mealText === 'Not Included') {
             value = <span className="text-tactical-500 italic">{mealText}</span>;
         } else {
-            // Render text and kosher icon together
             value = <span>{mealText} {isKosher}</span>;
         }
         break;
