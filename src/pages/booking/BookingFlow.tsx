@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Check, ChevronRight, Package, Calendar, CheckCircle, Info } from 'lucide-react'; // Added CheckCircle/Info for confirmation step
+import { Check, ChevronRight, Package, Calendar, CheckCircle, Info, Minus, Plus } from 'lucide-react'; // Added CheckCircle/Info for confirmation step, Minus/Plus for quantity
 import { Header } from '../../components/common/Header';
 import { Footer } from '../../components/common/Footer';
 import { Button } from '../../components/common/Button';
@@ -46,7 +46,7 @@ const BookingFlow: React.FC = () => {
   // Use courseId directly from URL params, assuming it's the UUID
   const { courseId } = useParams<{ courseId: string }>();
   const { isAuthenticated, user } = useAuthStore();
-  const { selectCourse, selectedCourse, selectDate, selectedDate, addExtra, removeExtra, selectedExtras, calculateTotal, createBooking, resetSelection } = useBookingStore();
+  const { selectCourse, selectedCourse, selectDate, selectedDate, increaseQuantity, decreaseQuantity, getExtraQuantity, selectedExtras, calculateTotal, createBooking, resetSelection } = useBookingStore();
   
   const [step, setStep] = useState(1);
   // State now holds the processed type which includes the calculated count
@@ -56,25 +56,11 @@ const BookingFlow: React.FC = () => {
   const [isBookingComplete, setIsBookingComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Filter extras by category for better organization
-  const experienceExtras = extras.filter(extra => extra.category === 'experience');
-  const tacticalExtras = extras.filter(extra => extra.category === 'tactical');
-  const accommodationExtras = extras.filter(extra => extra.category === 'accommodation');
-  const mediaExtras = extras.filter(extra => extra.category === 'media');
-  
-  // Check if an extra is selected
-  const isExtraSelected = (extraId: string): boolean => {
-    return selectedExtras.some(e => e.id === extraId);
-  };
-  
-  // Toggle extra selection
-  const toggleExtra = (extra: Extra) => {
-    if (isExtraSelected(extra.id)) {
-      removeExtra(extra.id);
-    } else {
-      addExtra(extra as BookingExtra);
-    }
-  };
+  // Filter extras by category for better organization - REMOVED
+  // const experienceExtras = extras.filter(extra => extra.category === 'experience');
+  // const tacticalExtras = extras.filter(extra => extra.category === 'tactical');
+  // const accommodationExtras = extras.filter(extra => extra.category === 'accommodation');
+  // const mediaExtras = extras.filter(extra => extra.category === 'media');
   
   // Navigate to next step
   const nextStep = () => {
@@ -453,121 +439,68 @@ const BookingFlow: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="font-medium text-tactical-900 mb-4">Add Optional Extras</h3>
                     
-                    {/* Experience Extras */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-tactical-700 mb-2">Experiences</h4>
-                      <div className="space-y-2">
-                        {experienceExtras.map(extra => (
+                    {/* Display all extras in a single list */}
+                    <div className="space-y-2">
+                      {extras.map(extra => {
+                        const quantity = getExtraQuantity(extra.id); // Get current quantity
+                        return (
                           <div 
                             key={extra.id}
-                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                              isExtraSelected(extra.id) 
-                                ? 'border-accent-500 bg-accent-50' 
-                                : 'border-gray-200 hover:border-gray-300'
+                            className={`border rounded-lg p-3 transition-colors relative ${ 
+                              quantity > 0
+                                ? 'border-accent-400 bg-accent-50/50' 
+                                : 'border-gray-200'
                             }`}
-                            onClick={() => toggleExtra(extra)}
                           >
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center pr-24"> {/* Increased padding right for controls */}
                               <div>
                                 <span className="font-medium text-tactical-800">{extra.name}</span>
                                 <p className="text-xs text-tactical-600">{extra.description}</p>
                               </div>
-                              <span className="font-semibold text-tactical-900">
+                              <span className="font-semibold text-tactical-900 ml-2"> {/* Added margin left */}
                                 {formatCurrency(extra.price)}
                               </span>
                             </div>
-                            <button
-                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
-                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleExtra(extra as BookingExtra);
-                              }}
-                            >
-                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Tactical Extras */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-tactical-700 mb-2">Tactical Add-ons</h4>
-                      <div className="space-y-2">
-                        {tacticalExtras.map(extra => (
-                          <div 
-                            key={extra.id}
-                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                              isExtraSelected(extra.id) 
-                                ? 'border-accent-500 bg-accent-50' 
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => toggleExtra(extra)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <span className="font-medium text-tactical-800">{extra.name}</span>
-                                <p className="text-xs text-tactical-600">{extra.description}</p>
-                              </div>
-                              <span className="font-semibold text-tactical-900">
-                                {formatCurrency(extra.price)}
-                              </span>
+                            {/* Quantity controls */}
+                            <div className="absolute top-1/2 right-3 transform -translate-y-1/2 flex items-center space-x-2">
+                              {quantity === 0 ? (
+                                // Show "Add" button if quantity is 0
+                                <Button 
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => increaseQuantity(extra as BookingExtra)}
+                                  className="px-3 py-1"
+                                >
+                                  Add
+                                </Button>
+                              ) : (
+                                // Show -, quantity, + if quantity > 0
+                                <>
+                                  <Button 
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => decreaseQuantity(extra.id)} 
+                                    aria-label={`Decrease quantity of ${extra.name}`}
+                                    className="rounded-full text-tactical-600 hover:bg-tactical-100 p-1"
+                                  >
+                                    <Minus className="w-4 h-4" />
+                                  </Button>
+                                  <span className="font-medium text-tactical-800 w-6 text-center">{quantity}</span>
+                                  <Button 
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => increaseQuantity(extra as BookingExtra)}
+                                    aria-label={`Increase quantity of ${extra.name}`}
+                                    className="rounded-full text-tactical-600 hover:bg-tactical-100 p-1"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
                             </div>
-                            <button
-                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
-                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleExtra(extra as BookingExtra);
-                              }}
-                            >
-                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
-                            </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Media Extras */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-tactical-700 mb-2">Media & Merchandise</h4>
-                      <div className="space-y-2">
-                        {mediaExtras.map(extra => (
-                          <div 
-                            key={extra.id}
-                            className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                              isExtraSelected(extra.id) 
-                                ? 'border-accent-500 bg-accent-50' 
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => toggleExtra(extra)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <span className="font-medium text-tactical-800">{extra.name}</span>
-                                <p className="text-xs text-tactical-600">{extra.description}</p>
-                              </div>
-                              <span className="font-semibold text-tactical-900">
-                                {formatCurrency(extra.price)}
-                              </span>
-                            </div>
-                            <button
-                              className={`absolute top-2 right-2 p-1 rounded-full text-xs ${
-                                isExtraSelected(extra.id) ? 'bg-accent-600 text-white' : 'bg-gray-200 text-gray-600'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleExtra(extra as BookingExtra);
-                              }}
-                            >
-                              {isExtraSelected(extra.id) ? 'Remove' : 'Add'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -585,7 +518,7 @@ const BookingFlow: React.FC = () => {
                       <div>
                         <span className="text-tactical-700">Selected Extras:</span>
                         <p className="text-lg font-semibold text-tactical-900">
-                          {formatCurrency(selectedExtras.reduce((sum, extra) => sum + extra.price, 0))}
+                          {formatCurrency(selectedExtras.reduce((sum, item) => sum + (item.extra.price * item.quantity), 0))}
                         </p>
                       </div>
                     )}

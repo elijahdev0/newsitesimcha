@@ -1,20 +1,27 @@
 import { create } from 'zustand';
 import { Booking, BookingExtra, CourseDate, Course } from '../types';
 import { courses } from '../data/courses';
-import { courseDates } from '../data/dates';
 import { supabase } from '../lib/supabase';
+
+// Define the structure for selected extras with quantity
+interface SelectedExtraItem {
+  extra: BookingExtra;
+  quantity: number;
+}
 
 interface BookingState {
   bookings: Booking[];
   selectedCourse: Course | null;
   selectedDate: CourseDate | null;
-  selectedExtras: BookingExtra[];
+  selectedExtras: SelectedExtraItem[]; // Updated structure
   isLoading: boolean;
   
   selectCourse: (courseId: string) => void;
   selectDate: (date: CourseDate | null) => void;
-  addExtra: (extra: BookingExtra) => void;
-  removeExtra: (extraId: string) => void;
+  // Updated function signatures for quantity
+  increaseQuantity: (extra: BookingExtra) => void;
+  decreaseQuantity: (extraId: string) => void;
+  getExtraQuantity: (extraId: string) => number; // Helper to get quantity
   calculateTotal: () => number;
   createBooking: (userId: string) => Promise<string>;
   getBookings: () => Promise<Booking[]>;
@@ -25,7 +32,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   bookings: [],
   selectedCourse: null,
   selectedDate: null,
-  selectedExtras: [],
+  selectedExtras: [], // Initialize with new structure
   isLoading: false,
   
   selectCourse: (courseId) => {
@@ -37,16 +44,56 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     set({ selectedDate: date });
   },
   
-  addExtra: (extra) => {
-    set(state => ({
-      selectedExtras: [...state.selectedExtras, extra]
-    }));
+  // Renamed addExtra to increaseQuantity and updated logic
+  increaseQuantity: (extra) => {
+    set(state => {
+      const existingIndex = state.selectedExtras.findIndex(item => item.extra.id === extra.id);
+      if (existingIndex > -1) {
+        // Extra exists, increment quantity
+        const updatedExtras = [...state.selectedExtras];
+        updatedExtras[existingIndex] = {
+          ...updatedExtras[existingIndex],
+          quantity: updatedExtras[existingIndex].quantity + 1
+        };
+        return { selectedExtras: updatedExtras };
+      } else {
+        // Extra doesn't exist, add with quantity 1
+        return { selectedExtras: [...state.selectedExtras, { extra, quantity: 1 }] };
+      }
+    });
   },
   
-  removeExtra: (extraId) => {
-    set(state => ({
-      selectedExtras: state.selectedExtras.filter(e => e.id !== extraId)
-    }));
+  // Renamed removeExtra to decreaseQuantity and updated logic
+  decreaseQuantity: (extraId) => {
+    set(state => {
+      const existingIndex = state.selectedExtras.findIndex(item => item.extra.id === extraId);
+      if (existingIndex > -1) {
+        const currentQuantity = state.selectedExtras[existingIndex].quantity;
+        if (currentQuantity > 1) {
+          // Quantity > 1, decrement
+          const updatedExtras = [...state.selectedExtras];
+          updatedExtras[existingIndex] = {
+            ...updatedExtras[existingIndex],
+            quantity: currentQuantity - 1
+          };
+          return { selectedExtras: updatedExtras };
+        } else {
+          // Quantity is 1, remove the item
+          return { 
+            selectedExtras: state.selectedExtras.filter(item => item.extra.id !== extraId) 
+          };
+        }
+      } 
+      // If extra not found (shouldn't happen with correct UI), do nothing
+      return {}; 
+    });
+  },
+
+  // Helper function to get the quantity of a specific extra
+  getExtraQuantity: (extraId) => {
+    const { selectedExtras } = get();
+    const item = selectedExtras.find(item => item.extra.id === extraId);
+    return item ? item.quantity : 0;
   },
   
   calculateTotal: () => {
@@ -54,7 +101,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     if (!selectedCourse) return 0;
     
     const coursePrice = selectedCourse.price;
-    const extrasTotal = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
+    // Update calculation to include quantity
+    const extrasTotal = selectedExtras.reduce((sum, item) => sum + (item.extra.price * item.quantity), 0);
     
     return coursePrice + extrasTotal;
   },
@@ -107,12 +155,15 @@ export const useBookingStore = create<BookingState>((set, get) => ({
 
       // 3. Prepare data for 'booking_extras' table (if any extras were selected)
       if (selectedExtras.length > 0) {
-        const extrasData = selectedExtras.map(extra => ({
-          booking_id: newBookingId,
-          extra_id: extra.id,
-          price_at_booking: extra.price // Record the price at the time of booking
-          // created_at handled by DB
-        }));
+        // Expand the extras based on quantity for insertion
+        const extrasData = selectedExtras.flatMap(item => 
+          Array.from({ length: item.quantity }, () => ({
+            booking_id: newBookingId,
+            extra_id: item.extra.id,
+            price_at_booking: item.extra.price // Record the price at the time of booking
+            // created_at handled by DB
+          }))
+        );
 
         // 4. Insert into 'booking_extras' table
         const { error: extrasError } = await supabase
@@ -160,7 +211,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     set({
       selectedCourse: null,
       selectedDate: null,
-      selectedExtras: []
+      selectedExtras: [] // Reset with empty array
     });
   }
 }));

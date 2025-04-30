@@ -27,6 +27,7 @@ export type CourseDate = {
   startDate: string;
   endDate: string;
   maxParticipants: number;
+  currentParticipants?: number;
 };
 
 export type Booking = {
