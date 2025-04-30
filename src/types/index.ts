@@ -56,3 +56,11 @@ export type Extra = {
   category: 'experience' | 'tactical' | 'media' | 'accommodation' | 'transport' | 'ammo' | 'weapon' | 'hospitality';
   description?: string;
 };
+
+// Blog Post Types
+export type Post = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+};

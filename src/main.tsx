@@ -19,6 +19,8 @@ import ManageCourseDates from './pages/admin/ManageCourseDates.tsx';
 import BookingFlow from './pages/booking/BookingFlow.tsx';
 import Privacy from './pages/Privacy.tsx';
 import Terms from './pages/Terms.tsx';
+import Blog from './pages/Blog.tsx';
+import BlogPost from './pages/BlogPost.tsx';
 
 // Common Components
 import WhatsappFAB from './components/common/WhatsappFAB.tsx';
@@ -65,6 +67,8 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/book/:courseId" element={<BookingFlow />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:postId" element={<BlogPost />} />
 
         {/* Authenticated User Routes (Example - Dashboard might need auth check) */}
         {/* TODO: Add protected route for dashboard if needed */}

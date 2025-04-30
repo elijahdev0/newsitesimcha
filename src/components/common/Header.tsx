@@ -42,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default' }) => {
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
     { name: 'Courses', path: '/courses' },
+    { name: 'Blog', path: '/blog' },
     { name: 'Contact', path: '/contact' },
   ];
 
