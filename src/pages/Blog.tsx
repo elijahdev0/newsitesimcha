@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
+import { SEO } from '../components/common/SEO';
 
 // Define a simplified Post type for the blog listing that doesn't include content
 interface BlogPostListing {
@@ -11,6 +12,15 @@ interface BlogPostListing {
   title: string;
   created_at: string;
 }
+
+// Create a proper URL slug from a title, used for SEO
+const createUrlSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove non-word chars
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .replace(/-+/g, '-');     // Replace multiple hyphens with single hyphen
+};
 
 const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPostListing[]>([]);
@@ -42,8 +52,37 @@ const Blog: React.FC = () => {
     fetchPosts();
   }, []);
 
+  // Generate blog list schema
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Training Insights Blog",
+    "url": "https://baldeagletactical.com/blog",
+    "description": "Expert insights and guides on tactical training, firearms proficiency, and military readiness.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Bald Eagle Tactical",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://i.imgur.com/0jZnTpQ.png"
+      }
+    },
+    "blogPost": posts.map(post => ({
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "datePublished": post.created_at,
+      "url": `https://baldeagletactical.com/blog/${post.id}/${createUrlSlug(post.title)}`
+    }))
+  };
+
   return (
     <>
+      <SEO 
+        title="Training Insights Blog"
+        description="Expert insights and guides on tactical training, firearms proficiency, and military readiness. Stay current with our latest articles."
+        canonical="https://baldeagletactical.com/blog"
+        schema={blogSchema}
+      />
       <Header variant="dark-text" />
       <main className="min-h-screen bg-tactical-50 pt-32 pb-16">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -68,7 +107,7 @@ const Blog: React.FC = () => {
               {posts.map((post) => (
                 <Link 
                   key={post.id} 
-                  to={`/blog/${post.id}`} 
+                  to={`/blog/${post.id}/${createUrlSlug(post.title)}`} 
                   className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200"
                 >
                   <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>

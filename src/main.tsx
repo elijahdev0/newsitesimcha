@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 
 // Zustand Store for Auth
@@ -53,39 +54,44 @@ const AdminRoute = () => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Router>
-      <ScrollToTop />
-      <WhatsappFAB />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/book/:courseId" element={<BookingFlow />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:postId" element={<BlogPost />} />
+    <HelmetProvider>
+      <Router>
+        <ScrollToTop />
+        <WhatsappFAB />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/book/:courseId" element={<BookingFlow />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/blog" element={<Blog />} />
+          
+          {/* Support both URL patterns for blog posts for backward compatibility */}
+          <Route path="/blog/:postId" element={<BlogPost />} />
+          <Route path="/blog/:postId/:slug" element={<BlogPost />} />
 
-        {/* Authenticated User Routes (Example - Dashboard might need auth check) */}
-        {/* TODO: Add protected route for dashboard if needed */}
-        <Route path="/dashboard" element={<Dashboard />} />
+          {/* Authenticated User Routes (Example - Dashboard might need auth check) */}
+          {/* TODO: Add protected route for dashboard if needed */}
+          <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Protected Admin Routes */}
-        <Route element={<AdminRoute />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          {/* Add other admin routes here */}
-          <Route path="/admin/courses/:id/dates" element={<ManageCourseDates />} />
-          {/* Redirect /admin to /admin/dashboard */}
-           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        </Route>
+          {/* Protected Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            {/* Add other admin routes here */}
+            <Route path="/admin/courses/:id/dates" element={<ManageCourseDates />} />
+            {/* Redirect /admin to /admin/dashboard */}
+             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          </Route>
 
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </HelmetProvider>
   </StrictMode>
 );
