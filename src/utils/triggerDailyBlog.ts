@@ -32,10 +32,10 @@ export async function triggerDailyBlogIfNeeded() {
     return false;
   }
 
-  // 2. Check if more than 5 minutes have passed
+  // 2. Check if more than 24 hours have passed
   const lastCreated = new Date(data.created_at).getTime();
   const now = Date.now();
-  if (now - lastCreated > 12 * 60 * 1000) {
+  if (now - lastCreated > 24 * 60 * 60 * 1000) {
     await fetch(edgeFunctionUrl, {
       method: 'POST',
       headers: {
