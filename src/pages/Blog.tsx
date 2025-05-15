@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { SEO } from '../components/common/SEO';
+import { triggerDailyBlogIfNeeded } from '../utils/triggerDailyBlog';
 
 // Define a simplified Post type for the blog listing that doesn't include content
 interface BlogPostListing {
@@ -28,6 +29,9 @@ const Blog: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Trigger the Edge Function if needed, but do not block fetching posts
+    triggerDailyBlogIfNeeded();
+
     const fetchPosts = async () => {
       try {
         setLoading(true);
@@ -125,4 +129,4 @@ const Blog: React.FC = () => {
   );
 };
 
-export default Blog; 
+export default Blog;
